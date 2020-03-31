@@ -23,8 +23,8 @@ model:
   lr_decay_epochs: 10000
   lr_decay_ratio: 0.5
   loss:
-    # distortion-oriented : 1, 0, 0
-    # perception-oriented : 1, 1e-3, 1e-3
+    # distortion-oriented (FRSR)  : 1, 0, 0
+    # perception-oriented (NatSR) : 1, 1e-3, 1e-3
     recon_weight: 1        # lambda_1
     natural_weight: 1e-3   # lambda_2
     generate_weight: 1e-3  # lambda_3
