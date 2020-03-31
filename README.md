@@ -21,6 +21,19 @@ In particular, we focus on the domain prior properties of SISR problem.
 Specifically, we define the naturalness prior in the low-level domain and constrain the output image in the natural manifold, which eventually generates more natural and realistic images. 
 Our results show better naturalness compared to the recent super-resolution algorithms including perception-oriented ones.
 
+## Usage
+
+1. **Change** the parameter what you want [`config.yaml`](./config.yaml)
+
+* At training : `mode: train`
+* At testing : `mode: test`
+
+2. Run!
+
+```shell script
+$ python3 -m natsr
+```
+
 ## Citation
 
 ```
