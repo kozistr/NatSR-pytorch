@@ -2,7 +2,7 @@
 
 init:
 	pip3 install -U pipenv
-	pipenv sync --dev
+	pipenv install --dev
 
 check:
 	isort --recursive --check-only natsr
