@@ -1,8 +1,5 @@
 mode: 'train'
 data:
-  height: 192
-  width: 192
-  channel: 3
   scale: 4
   n_samples: 352432
   div2k:
@@ -18,6 +15,9 @@ data:
   tfr_data_path: './train_NatSR_x4.tfr'
 model:
   model_name: 'NatSR'
+  height: 192
+  width: 192
+  channel: 3
   batch_size: 32
   epochs: 20000
   lr: 2e-4
@@ -29,9 +29,6 @@ model:
     recon_weight: 1        # lambda_1
     natural_weight: 1e-3   # lambda_2
     generate_weight: 1e-3  # lambda_3
-log:
-  checkpoint_path: 'models'
-  result_path: 'results'
 aux:
   n_gpu: 1
   seed: 2020
