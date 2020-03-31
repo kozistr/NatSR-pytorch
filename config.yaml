@@ -1,10 +1,11 @@
 mode: 'train'
 data:
-  scale: 4
   n_samples: 352432
   dataset_type: 'div2k'
   div2k:
     dataset_path: './DIV2K/'
+    scale: 4
+    interpolation: 'bicubic'
   urban100:
     dataset_path: './Urban100/'
   set5:
