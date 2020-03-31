@@ -1,9 +1,11 @@
 # NatSR-pytorch
 
-Unofficial implementation of natural and Realistic Single Image Super-Resolution with Explicit Natural Manifold Discrimination (CVPR, 2019) in pytorch
+Unofficial implementation of natural and Realistic Single Image Super-Resolution with Explicit Natural Manifold Discrimination (CVPR, 2019) in pytorch (w/ audit-friendly code)
 
 * official **tensorflow** implementation : [https://github.com/JWSoh/NatSR](https://github.com/JWSoh/NatSR)
 * paper : [ECCV2019](http://openaccess.thecvf.com/content_CVPR_2019/papers/Soh_Natural_and_Realistic_Single_Image_Super-Resolution_With_Explicit_Natural_Manifold_CVPR_2019_paper.pdf)
+
+**Work In Progress (WIP)**
 
 ## Environments
 
