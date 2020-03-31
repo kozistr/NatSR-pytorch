@@ -2,14 +2,16 @@ import os
 from glob import glob
 from typing import List
 
+import cv2
 import numpy as np
 from torch.utils.data import DataLoader, Dataset
+from tqdm import tqdm
 
 from natsr.utils import is_valid_key
 
 
 class DIV2KDataSet(Dataset):
-    def __init__(self, config):
+    def __init__(self, config, data_type: str = 'train'):
         self.config = config
 
         self.lr_image_paths: List[str] = []
@@ -18,10 +20,10 @@ class DIV2KDataSet(Dataset):
         self.lr_images: np.ndarray = np.array([], dtype=np.uint8)
         self.hr_images: np.ndarray = np.array([], dtype=np.uint8)
 
-        self._get_image_paths()
+        self._get_image_paths(data_type=data_type)
         self._load_images()
 
-    def _get_image_paths(self, mode: str = 'train') -> None:
+    def _get_image_paths(self, data_type: str = 'train') -> None:
         dataset_type: str = self.config['data']['dataset_type']
         scale: int = self.config['data']['div2k']['scale']
         interp: str = self.config['data']['div2k']['interpolation']
@@ -37,7 +39,7 @@ class DIV2KDataSet(Dataset):
                 glob(
                     os.path.join(
                         dataset_path,
-                        f'DIV2K_{mode}_LR_{interp}',
+                        f'DIV2K_{data_type}_LR_{interp}',
                         f'X{scale}',
                         '*.png',
                     )
@@ -47,7 +49,7 @@ class DIV2KDataSet(Dataset):
                 glob(
                     os.path.join(
                         dataset_path,
-                        f'DIV2K_{mode}_HR_{interp}',
+                        f'DIV2K_{data_type}_HR_{interp}',
                         f'X{scale}',
                         '*.png',
                     )
@@ -59,7 +61,20 @@ class DIV2KDataSet(Dataset):
             )
 
     def _load_images(self) -> None:
-        pass
+        self.lr_images = np.asarray(
+            [
+                cv2.imread(lr_image_path)[::-1]
+                for lr_image_path in tqdm(self.lr_image_paths)
+            ],
+            dtype=np.uint8,
+        )
+        self.lr_images = np.asarray(
+            [
+                cv2.imread(hr_image_path)[::-1]
+                for hr_image_path in tqdm(self.hr_image_paths)
+            ],
+            dtype=np.uint8,
+        )
 
 
 class ImageDataLoader(DataLoader):
