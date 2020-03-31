@@ -1,0 +1,34 @@
+data:
+  height: 192
+  width: 192
+  channel: 3
+  scale: 4
+  n_samples: 352432
+  div2k:
+    dataset_path: './DIV2K/'
+  set5:
+    dataset_path: './Set5/'
+  set14:
+    dataset_path: './Set14/'
+  bsd100:
+    dataset_path: './BSD100/'
+  urban100:
+    dataset_path: './URBAN100/'
+  tfr_data_path: './train_NatSR_x4.tfr'
+model:
+  model_name: 'NatSR'
+  batch_size: 32
+  epochs: 20000
+  steps: 1
+  learning_rate: 2e-4
+  loss:
+    recon_weight: 1  # lambda_1
+    natural_weight: 1e-3  # lambda_2
+    generate_weight: 1e-3  # lambda_3
+log:
+  checkpoint_path: 'models'
+  result_path: 'results'
+aux:
+  n_gpu: 1
+
+  seed: 2020
