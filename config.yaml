@@ -2,16 +2,17 @@ mode: 'train'
 data:
   scale: 4
   n_samples: 352432
+  dataset_type: 'div2k'
   div2k:
     dataset_path: './DIV2K/'
+  urban100:
+    dataset_path: './Urban100/'
   set5:
     dataset_path: './Set5/'
   set14:
     dataset_path: './Set14/'
   bsd100:
     dataset_path: './BSD100/'
-  urban100:
-    dataset_path: './URBAN100/'
   tfr_data_path: './train_NatSR_x4.tfr'
 model:
   model_name: 'NatSR'
