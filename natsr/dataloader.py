@@ -7,12 +7,12 @@ import numpy as np
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
-from natsr import DataType
-from natsr.utils import is_valid_key
+from natsr import DataSets, DataType
+from natsr.utils import is_gpu_available, is_valid_key
 
 
 class DIV2KDataSet(Dataset):
-    def __init__(self, config, data_type: str = 'train'):
+    def __init__(self, config, data_type: str):
         self.config = config
 
         self.lr_image_paths: List[str] = []
@@ -84,5 +84,23 @@ class DIV2KDataSet(Dataset):
         return len(self.lr_image_paths)
 
 
-class ImageDataLoader(DataLoader):
-    pass
+def build_data_loader(config, data_type: str) -> DataLoader:
+    dataset_type: str = config['data']['dataset_type']
+
+    if dataset_type == DataSets.DIV2K:
+        dataset = DIV2KDataSet(config, data_type)
+    else:
+        raise NotImplementedError(
+            f'[-] not supported dataset_type : {dataset_type}'
+        )
+
+    data_loader = DataLoader(
+        dataset=dataset,
+        batch_size=config['model']['batch_size'],
+        shuffle=True,
+        pin_memory=is_gpu_available(),
+        drop_last=False,
+        num_workers=config['aux']['n_threads'],
+    )
+
+    return data_loader
