@@ -1,4 +1,4 @@
-from natsr import CONFIG_FILENAME
+from natsr import CONFIG_FILENAME, Mode
 from natsr.inference import inference
 from natsr.test import test
 from natsr.train import train
@@ -9,11 +9,11 @@ def main():
     config = get_config(CONFIG_FILENAME)
 
     mode: str = config['mode']
-    if mode == 'train':
+    if mode == Mode.TRAIN:
         train(config)
-    elif mode == 'test':
+    elif mode == Mode.TEST:
         test(config)
-    elif mode == 'inference':
+    elif mode == Mode.INFERENCE:
         inference(config)
     else:
         raise NotImplementedError(f'[-] not supported mode : {mode}')

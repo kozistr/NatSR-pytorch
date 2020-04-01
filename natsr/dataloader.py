@@ -7,6 +7,7 @@ import numpy as np
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
+from natsr import DataType
 from natsr.utils import is_valid_key
 
 
@@ -23,7 +24,7 @@ class DIV2KDataSet(Dataset):
         self._get_image_paths(data_type=data_type)
         self._load_images()
 
-    def _get_image_paths(self, data_type: str = 'train') -> None:
+    def _get_image_paths(self, data_type: str = DataType.TRAIN) -> None:
         dataset_type: str = self.config['data']['dataset_type']
         scale: int = self.config['data']['div2k']['scale']
         interp: str = self.config['data']['div2k']['interpolation']
