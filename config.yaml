@@ -33,4 +33,5 @@ model:
     generate_weight: 1e-3  # lambda_3
 aux:
   n_gpu: 1
+  n_threads: 8
   seed: 2020
