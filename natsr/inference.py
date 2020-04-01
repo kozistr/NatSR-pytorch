@@ -1,0 +1,2 @@
+def inference(config):
+    pass
