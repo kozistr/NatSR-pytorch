@@ -76,6 +76,12 @@ class DIV2KDataSet(Dataset):
             dtype=np.uint8,
         )
 
+    def __getitem__(self, item: int):
+        return self.lr_images[item], self.hr_images[item]
+
+    def __len__(self):
+        return len(self.lr_image_paths)
+
 
 class ImageDataLoader(DataLoader):
     pass
