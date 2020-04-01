@@ -1,5 +1,6 @@
 from typing import Dict
 
+import torch
 import yaml
 
 
@@ -10,3 +11,7 @@ def get_config(filename: str):
 
 def is_valid_key(d: Dict[str, str], key: str) -> bool:
     return key in d
+
+
+def is_gpu_available() -> bool:
+    return torch.cuda.is_available()
