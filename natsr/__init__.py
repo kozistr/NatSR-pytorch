@@ -15,3 +15,8 @@ class DataType(str, Enum):
     TRAIN = 'train'
     VALID = 'valid'
     TEST = 'test'
+
+
+@unique
+class DataSets(str, Enum):
+    DIV2K = 'div2k'
