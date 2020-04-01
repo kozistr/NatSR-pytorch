@@ -34,8 +34,9 @@ $ cd ./NatSR-pytorch
 
 1. **Change** the parameter what you want [`config.yaml`](./config.yaml)
 
-* At training : `mode: train`
-* At testing : `mode: test`
+* At train : `mode: train`
+* At test : `mode: test`
+* At inference : `mode: inference`
 
 2. Run!
 
