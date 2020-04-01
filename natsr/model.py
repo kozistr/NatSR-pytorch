@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class DenseBlock(nn.Module):
+class ResidualDenseBlock(nn.Module):
     def __init__(
         self, n_feats: int = 64, nb_layers: int = 4, scale: float = 0.1
     ):
@@ -13,13 +13,21 @@ class DenseBlock(nn.Module):
 
         self.convs = nn.ModuleList(
             [
-                nn.Conv2d(self.n_feats * (i + 1), self.n_feats, kernel_size=3)
+                nn.Conv2d(
+                    self.n_feats * (i + 1),
+                    self.n_feats,
+                    kernel_size=3,
+                    padding=1,
+                )
                 for i in range(self.nb_layers - 1)
             ]
         )
         self.act = nn.ReLU()
         self.fusion_conv = nn.Conv2d(
-            self.n_feats * (self.nb_layers - 1), self.n_feats, kernel_size=1
+            self.n_feats * (self.nb_layers - 1),
+            self.n_feats,
+            kernel_size=1,
+            padding=0,
         )
 
         self._weight_initialize()
@@ -46,12 +54,37 @@ class DenseBlock(nn.Module):
 
 
 class Fractal(nn.Module):
-    def __init__(self, scale: int = 4):
+    def __init__(self, config, scale: int = 4):
         super().__init__()
+        self.config = config
         self.scale = scale
 
+        self.n_feats = self.config['model']['n_feats']
+
+        self.head_conv = nn.Conv2d(
+            self.config['model']['channel'], self.n_feats * 1, kernel_size=3
+        )
+
+        self.rd_blocks = nn.ModuleList(
+            [
+                ResidualDenseBlock(
+                    self.n_feats * 1,
+                    nb_layers=self.config['model']['nb_layers'],
+                    scale=self.config['model']['scale'],
+                )
+                for _ in range(self.config['model']['n_rep_rd_blocks'])
+                for _ in range(self.config['model']['n_rd_blocks'])
+            ]
+        )
+
     def forward(self, x):
-        pass
+        x_head = self.head_conv(x)
+
+        for _ in range(self.config['model']['n_rd_blocks']):
+            for _ in range(self.config['model']['n_rep_rd_blocks']):
+                pass
+
+        return x_head
 
 
 class NMD(nn.Module):
