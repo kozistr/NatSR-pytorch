@@ -21,7 +21,7 @@ model:
   width: 192
   channel: 3
   n_feats: 64
-  nb_layers: 4
+  nb_layers: 6
   n_rep_rd_blocks: 2
   n_rd_blocks: 4
   scale: 0.1
