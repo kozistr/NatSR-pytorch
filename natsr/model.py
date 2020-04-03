@@ -62,13 +62,19 @@ class Fractal(nn.Module):
         self.n_feats = self.config['model']['n_feats']
 
         self.head_conv = nn.Conv2d(
-            self.config['model']['channel'], self.n_feats * 1, kernel_size=3
+            self.config['model']['channel'], self.n_feats, kernel_size=3
+        )
+        self.tail_conv = nn.Conv2d(
+            self.n_feats, self.n_feats, kernel_size=3
+        )
+        self.rgb_conv = nn.Conv2d(
+            self.n_feats, self.config['model']['channel'], kernel_size=3
         )
 
         self.rd_blocks = nn.ModuleList(
             [
                 ResidualDenseBlock(
-                    self.n_feats * 1,
+                    self.n_feats,
                     nb_layers=self.config['model']['nb_layers'],
                     scale=self.config['model']['scale'],
                 )
@@ -78,13 +84,40 @@ class Fractal(nn.Module):
         )
 
     def forward(self, x):
-        x_head = self.head_conv(x)
+        x_conv1 = self.head_conv(x)
 
-        for _ in range(self.config['model']['n_rd_blocks']):
-            for _ in range(self.config['model']['n_rep_rd_blocks']):
-                pass
+        x = x_conv1
+        for i in range(self.config['model']['n_rep_rd_blocks']):
+            x = self.rd_blocks[i](x)
+        x_conv2 = x + x_conv1
 
-        return x_head
+        x = x_conv2
+        for i in range(self.config['model']['n_rep_rd_blocks']):
+            x = self.rd_blocks[i](x)
+        x_conv3 = x + x_conv2 + x_conv1
+
+        x = x_conv3
+        for i in range(self.config['model']['n_rep_rd_blocks']):
+            x = self.rd_blocks[i](x)
+        x_conv4 = x + x_conv3
+
+        x = x_conv4
+        for i in range(self.config['model']['n_rep_rd_blocks']):
+            x = self.rd_blocks[i](x)
+        x_conv5 = x + x_conv4 + x_conv3 + x_conv1
+
+        x = x_conv5
+        x = self.tail_conv(x)
+        x = x + x_conv1
+
+        if self.scale == 4:
+            pass
+        else:
+            pass
+
+        x = self.rgb_conv(x)
+
+        return x
 
 
 class NMD(nn.Module):
