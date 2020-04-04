@@ -7,7 +7,7 @@ from natsr import ModelType
 
 class ResidualDenseBlock(nn.Module):
     def __init__(
-            self, n_feats: int = 64, nb_layers: int = 4, scale: float = 0.1
+        self, n_feats: int = 64, nb_layers: int = 4, scale: float = 0.1
     ):
         super().__init__()
         self.n_feats = n_feats
@@ -88,7 +88,7 @@ class Generator(nn.Module):
 
         if self.scale == 4:
             n_pix_shuffle_feats: int = self.n_feats * (self.scale // 2) * (
-                    self.scale // 2
+                self.scale // 2
             )
 
             self.up_conv1 = nn.Conv2d(
@@ -365,13 +365,14 @@ class NMD(nn.Module):
         return x
 
 
-def build_model(config, model_type: str):
+def build_model(config, model_type: str, device: str):
     if model_type == ModelType.NATSR:
-        gen_network = Generator(config)
-        disc_network = Discriminator(config)
-        return gen_network, disc_network
+        gen_network = Generator(config).to(device)
+        disc_network = Discriminator(config).to(device)
+        nmd_network = NMD(config).to(device)
+        return gen_network, disc_network, nmd_network
     elif model_type == ModelType.NMD:
-        nmd_network = NMD(config)
+        nmd_network = NMD(config).to(device)
         return nmd_network
     else:
         raise NotImplementedError(
