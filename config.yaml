@@ -29,7 +29,8 @@ model:
     n_rep_rd_blocks: 2
     n_rd_blocks: 4
     scale: 0.1
-    batch_size: 1
+    batch_size: 32
+    epochs: 20000
     optimizer: 'adam'
     lr: 1e-4
     lr_schedule_type: 'exponential'
@@ -47,6 +48,7 @@ model:
     channel: 3
     n_feats: 64
     batch_size: 32
+    epochs: 20000
     sigma: 0.1
     sigma_mul_ratio: 0.8
     alpha: 0.5
@@ -55,7 +57,12 @@ model:
     optimizer: 'adam'
     lr: 1e-4
   eps: 1e-10
+checkpoint:
+  gen_model_path: './gen_model.pth'
+  disc_model_path: './disc_model.pth'
+  nmd_model_path: './nmd_model.pth'
 aux:
   n_gpu: 1
   n_threads: 8
+  device: 'cuda'
   seed: 2020
