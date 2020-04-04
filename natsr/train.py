@@ -13,7 +13,9 @@ def train(config):
     gen_optimizer = build_lr_scheduler(
         config, build_optimizers(config, gen_network)
     )
-    disc_optimizer = build_lr_scheduler(build_optimizers(config, disc_network))
+    disc_optimizer = build_lr_scheduler(
+        config, build_optimizers(config, disc_network)
+    )
     nmd_optimizer = build_optimizers(config, nmd_network)
 
     adv_loss = build_adversarial_loss(config)
