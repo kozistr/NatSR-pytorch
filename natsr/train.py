@@ -24,10 +24,10 @@ def natsr_trainer(config, model_type: str):
     gen_network, disc_network = build_model(config, model_type)
 
     gen_optimizer = build_lr_scheduler(
-        config, build_optimizers(config, model_type, gen_network)
+        config, model_type, build_optimizers(config, model_type, gen_network)
     )
     disc_optimizer = build_lr_scheduler(
-        config, build_optimizers(config, model_type, disc_network)
+        config, model_type, build_optimizers(config, model_type, disc_network)
     )
 
     adv_loss = build_adversarial_loss(config['model']['adv_loss_type'])
