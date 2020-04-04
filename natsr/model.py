@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn.utils import spectral_norm
 
 
 class ResidualDenseBlock(nn.Module):
@@ -185,7 +186,7 @@ class NMD(nn.Module):
             self.n_feats * 8, self.n_feats * 8, kernel_size=3, padding=1
         )
 
-        self.conv5_1 = nn.Conv2d(self.n_feats * 8, 1, kernel_size=3, padding=0)
+        self.conv5_1 = nn.Conv2d(self.n_feats * 8, 1, kernel_size=3, padding=1)
 
         self.max_pool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.gap = nn.AdaptiveAvgPool2d(1)
@@ -232,8 +233,133 @@ class NMD(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
+        self.config = config
+
+        self.n_feats = self.config['model']['n_feats']
+
+        self.conv1_1 = spectral_norm(
+            nn.Conv2d(
+                self.config['model']['channel'],
+                self.n_feats * 1,
+                kernel_size=3,
+                padding=1,
+            )
+        )
+        self.conv1_2 = spectral_norm(
+            nn.Conv2d(
+                self.n_feats * 1,
+                self.n_feats * 1,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+            )
+        )
+
+        self.conv2_1 = spectral_norm(
+            nn.Conv2d(
+                self.n_feats * 1, self.n_feats * 2, kernel_size=3, padding=1
+            )
+        )
+        self.conv2_2 = spectral_norm(
+            nn.Conv2d(
+                self.n_feats * 2,
+                self.n_feats * 2,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+            )
+        )
+
+        self.conv3_1 = spectral_norm(
+            nn.Conv2d(
+                self.n_feats * 2, self.n_feats * 4, kernel_size=3, padding=1
+            )
+        )
+        self.conv3_2 = spectral_norm(
+            nn.Conv2d(
+                self.n_feats * 4,
+                self.n_feats * 4,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+            )
+        )
+
+        self.conv4_1 = spectral_norm(
+            nn.Conv2d(
+                self.n_feats * 4, self.n_feats * 8, kernel_size=3, padding=1
+            )
+        )
+        self.conv4_2 = spectral_norm(
+            nn.Conv2d(
+                self.n_feats * 8,
+                self.n_feats * 8,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+            )
+        )
+
+        self.conv5_1 = spectral_norm(
+            nn.Conv2d(
+                self.n_feats * 8, self.n_feats * 16, kernel_size=3, padding=1
+            )
+        )
+        self.conv5_2 = spectral_norm(
+            nn.Conv2d(
+                self.n_feats * 16,
+                self.n_feats * 16,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+            )
+        )
+
+        self.conv6_1 = spectral_norm(
+            nn.Conv2d(self.n_feats * 16, 1, kernel_size=3, padding=1)
+        )
+
+        self.gap = nn.AdaptiveAvgPool2d(1)
+        self.act = nn.LeakyReLU(negative_slope=0.2)
+
+        self._weight_initialize()
+
+    def _weight_initialize(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.xavier_normal(
+                    m.weight, mode='fan_in',
+                )
 
     def forward(self, x):
-        pass
+        x = self.conv1_1(x)
+        x = self.act(x)
+        x = self.conv1_2(x)
+        x = self.act(x)
+
+        x = self.conv2_1(x)
+        x = self.act(x)
+        x = self.conv2_2(x)
+        x = self.act(x)
+
+        x = self.conv3_1(x)
+        x = self.act(x)
+        x = self.conv3_2(x)
+        x = self.act(x)
+
+        x = self.conv4_1(x)
+        x = self.act(x)
+        x = self.conv4_2(x)
+        x = self.act(x)
+
+        x = self.conv5_1(x)
+        x = self.act(x)
+        x = self.conv5_2(x)
+        x = self.act(x)
+
+        x = self.conv6_1(x)
+        x = self.gap(x)
+
+        return x
