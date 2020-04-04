@@ -1,10 +1,10 @@
+from torch import Tensor
+from torch.autograd import Variable
+
 from natsr import ModelType
 from natsr.dataloader import build_loader
-from natsr.losses import (
-    build_adversarial_loss,
-    build_classification_loss,
-    build_reconstruction_loss,
-)
+from natsr.losses import (build_adversarial_loss, build_classification_loss,
+                          build_reconstruction_loss)
 from natsr.model import build_model
 from natsr.optimizers import build_optimizers
 from natsr.schedulers import build_lr_scheduler
@@ -25,11 +25,10 @@ def nmd_trainer(config, model_type: str, device: str):
         device
     )
 
-    num_batches: int = len(train_loader) // config['model'][model_type][
-        'batch_size'
-    ]
-    for epoch in range(start_epochs, config['model']['epochs'] + 1):
-        for step in range(num_batches):
+    for epoch in range(
+        start_epochs, config['model'][model_type]['epochs'] + 1
+    ):
+        for lr, hr in train_loader:
             pass
 
 
@@ -47,12 +46,11 @@ def natsr_trainer(config, model_type: str, device: str):
     )
     _ = load_model(config['checkpoint']['nmd_model_path'], nmd_network, device)
 
-    gen_optimizer = build_lr_scheduler(
-        config, model_type, build_optimizers(config, model_type, gen_network)
-    )
-    disc_optimizer = build_lr_scheduler(
-        config, model_type, build_optimizers(config, model_type, disc_network)
-    )
+    gen_optimizer = build_optimizers(config, model_type, gen_network)
+    gen_lr_scheduler = build_lr_scheduler(config, model_type, gen_optimizer)
+
+    disc_optimizer = build_optimizers(config, model_type, disc_network)
+    disc_lr_scheduler = build_lr_scheduler(config, model_type, disc_optimizer)
 
     adv_loss = build_adversarial_loss(config['model']['adv_loss_type']).to(
         device
@@ -60,13 +58,33 @@ def natsr_trainer(config, model_type: str, device: str):
     rec_loss = build_reconstruction_loss(config['model']['rec_loss_type']).to(
         device
     )
+    cls_loss = build_classification_loss(config['model']['cls_loss_type']).to(
+        device
+    )
 
-    num_batches: int = len(train_loader) // config['model'][model_type][
-        'batch_size'
-    ]
-    for epoch in range(start_epochs, config['model']['epochs'] + 1):
-        for step in range(num_batches):
-            pass
+    for epoch in range(
+        start_epochs, config['model'][model_type]['epochs'] + 1
+    ):
+        for lr, hr in train_loader:
+            real = Variable(
+                Tensor(lr.size(0), 1).fill_(1.0), requires_grad=False
+            )
+            fake = Variable(
+                Tensor(lr.size(0), 1).fill_(0.0), requires_grad=False
+            )
+
+            gen_optimizer.zero_grad()
+
+            sr = gen_network(lr)
+
+            disc_optimizer.zero_grad()
+
+            loss = (
+                config['model'][ModelType.NATSR]['recon_weight'] * rec_loss
+                + config['model'][ModelType.NATSR]['natural_weight'] * cls_loss
+                + config['model'][ModelType.NATSR]['generate_weight']
+                * adv_loss
+            )
 
 
 def train(config):
@@ -75,6 +93,6 @@ def train(config):
 
     if model_type == ModelType.NATSR:
         natsr_trainer(config, model_type, device)
-    elif model_type == ModelType.NMD:
+    if model_type == ModelType.NMD:
         nmd_trainer(config, model_type, device)
     raise NotImplementedError(f'[-] not supported modeL_type : {model_type}')
