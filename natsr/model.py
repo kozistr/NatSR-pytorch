@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 from torch.nn.utils import spectral_norm
 
+from natsr import ModelType
+
 
 class ResidualDenseBlock(nn.Module):
     def __init__(
@@ -59,28 +61,30 @@ class ResidualDenseBlock(nn.Module):
 class Fractal(nn.Module):
     def __init__(self, config, scale: int = 4):
         super().__init__()
-        self.config = config
+        self.config = config['model']
+
         self.scale = scale
+        self.channel = self.config['model']['channel']
+        self.n_feats = self.config['model'][ModelType.NATSR]['n_feats']
+        self.n_rep_rd_blocks = self.config['model'][ModelType.NATSR][
+            'n_rep_rd_blocks'
+        ]
+        self.n_rd_blocks = self.config['model'][ModelType.NATSR]['n_rd_blocks']
+        self.nb_layers = self.config['model'][ModelType.NATSR]['nb_blocks']
 
-        self.n_feats = self.config['model']['n_feats']
-
-        self.head_conv = nn.Conv2d(
-            self.config['model']['channel'], self.n_feats, kernel_size=3
-        )
+        self.head_conv = nn.Conv2d(self.channel, self.n_feats, kernel_size=3)
         self.tail_conv = nn.Conv2d(self.n_feats, self.n_feats, kernel_size=3)
         self.rgb_conv = nn.Conv2d(
-            self.n_feats, self.config['model']['channel'], kernel_size=3
+            self.n_feats, self.channel, kernel_size=3, padding=1
         )
 
         self.rd_blocks = nn.ModuleList(
             [
                 ResidualDenseBlock(
-                    self.n_feats,
-                    nb_layers=self.config['model']['nb_layers'],
-                    scale=self.config['model']['scale'],
+                    self.n_feats, nb_layers=self.nb_layers, scale=self.scale,
                 )
-                for _ in range(self.config['model']['n_rep_rd_blocks'])
-                for _ in range(self.config['model']['n_rd_blocks'])
+                for _ in range(self.n_rep_rd_blocks)
+                for _ in range(self.n_rd_blocks)
             ]
         )
 
@@ -112,22 +116,22 @@ class Fractal(nn.Module):
         x_conv1 = self.head_conv(x)
 
         x = x_conv1
-        for i in range(self.config['model']['n_rep_rd_blocks']):
+        for i in range(self.n_rep_rd_blocks):
             x = self.rd_blocks[i](x)
         x_conv2 = x + x_conv1
 
         x = x_conv2
-        for i in range(self.config['model']['n_rep_rd_blocks']):
+        for i in range(self.n_rep_rd_blocks):
             x = self.rd_blocks[i](x)
         x_conv3 = x + x_conv2 + x_conv1
 
         x = x_conv3
-        for i in range(self.config['model']['n_rep_rd_blocks']):
+        for i in range(self.n_rep_rd_blocks):
             x = self.rd_blocks[i](x)
         x_conv4 = x + x_conv3
 
         x = x_conv4
-        for i in range(self.config['model']['n_rep_rd_blocks']):
+        for i in range(self.n_rep_rd_blocks):
             x = self.rd_blocks[i](x)
         x_conv5 = x + x_conv4 + x_conv3 + x_conv1
 
@@ -155,13 +159,11 @@ class NMD(nn.Module):
         super().__init__()
         self.config = config
 
-        self.n_feats = self.config['model']['n_feats']
+        self.channel = self.config['model']['channel']
+        self.n_feats = self.config['model'][ModelType.NMD]['n_feats']
 
         self.conv1_1 = nn.Conv2d(
-            self.config['model']['channel'],
-            self.n_feats * 1,
-            kernel_size=3,
-            padding=1,
+            self.channel, self.n_feats * 1, kernel_size=3, padding=1,
         )
         self.conv1_2 = nn.Conv2d(
             self.n_feats * 1, self.n_feats * 1, kernel_size=3, padding=1
@@ -237,16 +239,14 @@ class NMD(nn.Module):
 class Discriminator(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.config = config
+        self.config = config['model']
 
-        self.n_feats = self.config['model']['n_feats']
+        self.channel = self.config['model']['channel']
+        self.n_feats = self.config['n_feats']
 
         self.conv1_1 = spectral_norm(
             nn.Conv2d(
-                self.config['model']['channel'],
-                self.n_feats * 1,
-                kernel_size=3,
-                padding=1,
+                self.channel, self.n_feats * 1, kernel_size=3, padding=1,
             )
         )
         self.conv1_2 = spectral_norm(
@@ -367,8 +367,16 @@ class Discriminator(nn.Module):
         return x
 
 
-def build_model(config) -> Tuple[nn.Module, nn.Module, nn.Module]:
-    gen_network = Fractal(config)
-    nmd_network = NMD(config)
-    disc_network = Discriminator(config)
-    return gen_network, nmd_network, disc_network
+def build_model(config):
+    model_type: str = config['model']['model_type']
+    if model_type == ModelType.NATSR:
+        gen_network = Fractal(config)
+        disc_network = Discriminator(config)
+        return gen_network, disc_network
+    elif model_type == ModelType.NMD:
+        nmd_network = NMD(config)
+        return nmd_network
+    else:
+        raise NotImplementedError(
+            f'[-] not supported model_type : {model_type}'
+        )

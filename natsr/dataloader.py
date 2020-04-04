@@ -86,6 +86,12 @@ class DIV2KDataSet(Dataset):
 
 def build_data_loader(config, data_type: str) -> DataLoader:
     dataset_type: str = config['data']['dataset_type']
+    model_type: str = config['model']['model_type']
+
+    if not is_valid_key(config['model'], model_type):
+        raise NotImplementedError(
+            f'[-] not supported model_type : {model_type}'
+        )
 
     if dataset_type == DataSets.DIV2K:
         dataset = DIV2KDataSet(config, data_type)
@@ -96,7 +102,7 @@ def build_data_loader(config, data_type: str) -> DataLoader:
 
     data_loader = DataLoader(
         dataset=dataset,
-        batch_size=config['model']['batch_size'],
+        batch_size=config['model'][model_type]['batch_size'],
         shuffle=True,
         pin_memory=is_gpu_available(),
         drop_last=False,

@@ -30,7 +30,7 @@ def build_reconstruction_loss(config):
     if rec_loss_type == RecLossType.L2:
         return nn.MSELoss()
     raise NotImplementedError(
-        f'[-] not supported adv_loss_type : {adv_loss_type}'
+        f'[-] not supported adv_loss_type : {rec_loss_type}'
     )
 
 

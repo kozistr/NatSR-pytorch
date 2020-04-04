@@ -11,6 +11,12 @@ class Mode(str, Enum):
 
 
 @unique
+class ModelType(str, Enum):
+    NATSR = 'natsr'
+    NMD = 'nmd'
+
+
+@unique
 class DataType(str, Enum):
     TRAIN = 'train'
     VALID = 'valid'
