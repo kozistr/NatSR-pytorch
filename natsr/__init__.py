@@ -20,3 +20,9 @@ class DataType(str, Enum):
 @unique
 class DataSets(str, Enum):
     DIV2K = 'div2k'
+
+
+@unique
+class OptimizerType(str, Enum):
+    ADAM = 'adam'
+    SGD = 'sgd'
