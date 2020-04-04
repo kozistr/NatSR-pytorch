@@ -1,6 +1,6 @@
 import os
 from glob import glob
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy as np
@@ -104,3 +104,9 @@ def build_data_loader(config, data_type: str) -> DataLoader:
     )
 
     return data_loader
+
+
+def build_loader(config) -> Tuple[DataLoader, DataLoader]:
+    train_data_loader = build_data_loader(config, data_type=DataType.TRAIN)
+    valid_data_loader = build_data_loader(config, data_type=DataType.VALID)
+    return train_data_loader, valid_data_loader

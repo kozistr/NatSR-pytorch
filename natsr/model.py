@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 from torch.nn.utils import spectral_norm
@@ -363,3 +365,10 @@ class Discriminator(nn.Module):
         x = self.gap(x)
 
         return x
+
+
+def build_model(config) -> Tuple[nn.Module, nn.Module, nn.Module]:
+    gen_network = Fractal(config)
+    nmd_network = NMD(config)
+    disc_network = Discriminator(config)
+    return gen_network, nmd_network, disc_network
