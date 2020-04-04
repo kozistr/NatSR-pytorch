@@ -64,9 +64,7 @@ class Fractal(nn.Module):
         self.head_conv = nn.Conv2d(
             self.config['model']['channel'], self.n_feats, kernel_size=3
         )
-        self.tail_conv = nn.Conv2d(
-            self.n_feats, self.n_feats, kernel_size=3
-        )
+        self.tail_conv = nn.Conv2d(self.n_feats, self.n_feats, kernel_size=3)
         self.rgb_conv = nn.Conv2d(
             self.n_feats, self.config['model']['channel'], kernel_size=3
         )
@@ -82,6 +80,30 @@ class Fractal(nn.Module):
                 for _ in range(self.config['model']['n_rd_blocks'])
             ]
         )
+
+        if self.scale == 4:
+            n_pix_shuffle_feats: int = self.n_feats * (self.scale // 2) * (
+                self.scale // 2
+            )
+
+            self.up_conv1 = nn.Conv2d(
+                self.n_feats, n_pix_shuffle_feats, kernel_size=3, padding=1
+            )
+            self.up_conv2 = nn.Conv2d(
+                n_pix_shuffle_feats,
+                n_pix_shuffle_feats,
+                kernel_size=3,
+                padding=1,
+            )
+            self.pixel_shuffle = nn.PixelShuffle(self.scale // 2)
+        else:
+            self.up_conv1 = nn.Conv2d(
+                self.n_feats,
+                self.n_feats * self.scale * self.scale,
+                kernel_size=3,
+                padding=1,
+            )
+            self.pixel_shuffle = nn.PixelShuffle(self.scale)
 
     def forward(self, x):
         x_conv1 = self.head_conv(x)
@@ -111,9 +133,14 @@ class Fractal(nn.Module):
         x = x + x_conv1
 
         if self.scale == 4:
-            pass
+            x = self.up_conv1(x)
+            x = self.pixel_shuffle(x)
+
+            x = self.up_conv2(x)
+            x = self.pixel_shuffle(x)
         else:
-            pass
+            x = self.up_conv1(x)
+            x = self.pixel_shuffle(x)
 
         x = self.rgb_conv(x)
 
