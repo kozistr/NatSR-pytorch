@@ -367,8 +367,7 @@ class Discriminator(nn.Module):
         return x
 
 
-def build_model(config):
-    model_type: str = config['model']['model_type']
+def build_model(config, model_type: str):
     if model_type == ModelType.NATSR:
         gen_network = Fractal(config)
         disc_network = Discriminator(config)
