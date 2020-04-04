@@ -29,16 +29,12 @@ model:
   epochs: 20000
   adv_loss_type: 'gan'
   rec_loss_type: 'l1'
-  gen:
-    optimizer: 'adam'
-    lr: 1e-4
-    lr_decay_epochs: 100000
-    lr_decay_ratio: 0.1
-  disc:
-    optimizer: 'adam'
-    lr: 1e-4
-    lr_decay_epochs: 100000
-    lr_decay_ratio: 0.1
+  cls_loss_type: 'bce'
+  optimizer: 'adam'
+  lr: 1e-4
+  lr_schedule_type: 'exponential'
+  lr_decay_epochs: 100000
+  lr_decay_ratio: 0.1
   nmd:
     optimizer: 'adam'
     lr: 2e-4
