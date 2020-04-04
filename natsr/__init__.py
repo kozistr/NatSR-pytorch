@@ -38,6 +38,17 @@ class AdvLossType(str, Enum):
 
 
 @unique
+class ClsLossType(str, Enum):
+    BCE = 'bce'
+    CCE = 'cce'
+
+
+@unique
 class RecLossType(str, Enum):
     L1 = 'l1'
     L2 = 'l2'
+
+
+@unique
+class LRSchedulerType(str, Enum):
+    EXPONENTIAL = 'exponential'

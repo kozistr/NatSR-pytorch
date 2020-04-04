@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from natsr import AdvLossType, RecLossType
+from natsr import AdvLossType, ClsLossType, RecLossType
 
 
 def build_adversarial_loss(config):
@@ -9,6 +9,17 @@ def build_adversarial_loss(config):
         return nn.BCELoss()
     raise NotImplementedError(
         f'[-] not supported adv_loss_type : {adv_loss_type}'
+    )
+
+
+def build_classification_loss(config):
+    cls_loss_type: str = config['model']['cls_loss_type']
+    if cls_loss_type == ClsLossType.BCE:
+        return nn.BCELoss()
+    if cls_loss_type == ClsLossType.CCE:
+        return nn.CrossEntropyLoss()
+    raise NotImplementedError(
+        f'[-] not supported cls_loss_type : {cls_loss_type}'
     )
 
 
