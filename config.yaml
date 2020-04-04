@@ -27,15 +27,30 @@ model:
   scale: 0.1
   batch_size: 32
   epochs: 20000
-  lr: 2e-4
-  lr_decay_epochs: 10000
-  lr_decay_ratio: 0.5
+  adv_loss_type: 'gan'
+  rec_loss_type: 'l1'
+  gen:
+    optimizer: 'adam'
+    lr: 1e-4
+    lr_decay_epochs: 100000
+    lr_decay_ratio: 0.1
+  disc:
+    optimizer: 'adam'
+    lr: 1e-4
+    lr_decay_epochs: 100000
+    lr_decay_ratio: 0.1
+  nmd:
+    optimizer: 'adam'
+    lr: 2e-4
+    lr_decay_steps: 10000
+    lr_decay_ratio: 0.5
   loss:
     # distortion-oriented (FRSR)  : 1, 0, 0
     # perception-oriented (NatSR) : 1, 1e-3, 1e-3
     recon_weight: 1        # lambda_1
     natural_weight: 1e-3   # lambda_2
     generate_weight: 1e-3  # lambda_3
+  eps: 1e-10
 aux:
   n_gpu: 1
   n_threads: 8

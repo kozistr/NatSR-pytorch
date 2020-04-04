@@ -26,3 +26,18 @@ class DataSets(str, Enum):
 class OptimizerType(str, Enum):
     ADAM = 'adam'
     SGD = 'sgd'
+
+
+@unique
+class AdvLossType(str, Enum):
+    GAN = 'gan'
+    LSGAN = 'lsgan'
+    RAGAN = 'ragan'
+    WGAN = 'wgan'
+    WGANGP = 'wgan-gp'
+
+
+@unique
+class RecLossType(str, Enum):
+    L1 = 'l1'
+    L2 = 'l2'
