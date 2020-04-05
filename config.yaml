@@ -17,7 +17,7 @@ data:
   tfr_data_path: './train_NatSR_x4.tfr'
 model:
   model_name: 'natsr'
-  use_ra: True
+  use_ra: 1
   adv_loss_type: 'gan'
   rec_loss_type: 'l1'
   cls_loss_type: 'bce'
