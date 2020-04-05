@@ -1,6 +1,5 @@
 mode: 'train'
 data:
-  n_samples: 352432
   dataset_type: 'div2k'
   div2k:
     dataset_path: './DIV2K/'

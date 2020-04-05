@@ -1,28 +1,66 @@
 import os
 from glob import glob
+from math import sqrt
 from typing import List, Tuple
 
 import cv2
 import numpy as np
+from PIL import Image
 from torch.utils.data import DataLoader, Dataset
+from torchvision.transforms import (
+    Compose,
+    RandomCrop,
+    Resize,
+    ToPILImage,
+    ToTensor,
+)
 from tqdm import tqdm
 
-from natsr import DataSets, DataType
+from natsr import DataSets, DataType, ModelType
 from natsr.utils import is_gpu_available, is_valid_key
+
+
+def get_scale_factor(scale: int) -> int:
+    if scale & (scale - 1):
+        return int(sqrt(scale))
+    return scale
+
+
+def get_valid_crop_size(crop_size: int, scale: int) -> int:
+    return crop_size - (crop_size % scale)
+
+
+def hr_transform(crop_size: int):
+    return Compose([RandomCrop(crop_size), ToTensor(),])
+
+
+def lr_transform(crop_size: int, scale: int):
+    return Compose(
+        [
+            ToPILImage(),
+            Resize(crop_size // scale, interpolation=Image.BICUBIC),
+            ToTensor(),
+        ]
+    )
 
 
 class DIV2KDataSet(Dataset):
     def __init__(self, config, data_type: str):
         self.config = config
+        self.scale_factor: int = get_scale_factor(
+            config['data'][data_type]['scale']
+        )
+        self.crop_size: int = get_valid_crop_size(
+            config['model'][ModelType.NATSR]['height'], self.scale_factor
+        )
 
-        self.lr_image_paths: List[str] = []
         self.hr_image_paths: List[str] = []
-
-        self.lr_images: np.ndarray = np.array([], dtype=np.uint8)
         self.hr_images: np.ndarray = np.array([], dtype=np.uint8)
 
+        self.hr_transform = hr_transform(self.crop_size)
+        self.lr_transform = lr_transform(self.crop_size, self.scale_factor)
+
         self._get_image_paths(data_type=data_type)
-        self._load_images()
 
     def _get_image_paths(self, data_type: str = DataType.TRAIN) -> None:
         dataset_type: str = self.config['data']['dataset_type']
@@ -36,16 +74,6 @@ class DIV2KDataSet(Dataset):
 
         dataset_path: str = self.config['data'][dataset_type]['dataset_path']
         if os.path.exists(dataset_path):
-            self.lr_image_paths = sorted(
-                glob(
-                    os.path.join(
-                        dataset_path,
-                        f'DIV2K_{data_type}_LR_{interp}',
-                        f'X{scale}',
-                        '*.png',
-                    )
-                )
-            )
             self.hr_image_paths = sorted(
                 glob(
                     os.path.join(
@@ -64,24 +92,19 @@ class DIV2KDataSet(Dataset):
     def _load_images(self) -> None:
         self.lr_images = np.asarray(
             [
-                cv2.imread(lr_image_path)[::-1]
-                for lr_image_path in tqdm(self.lr_image_paths)
-            ],
-            dtype=np.uint8,
-        )
-        self.lr_images = np.asarray(
-            [
                 cv2.imread(hr_image_path)[::-1]
                 for hr_image_path in tqdm(self.hr_image_paths)
             ],
             dtype=np.uint8,
         )
 
-    def __getitem__(self, item: int):
-        return self.lr_images[item], self.hr_images[item]
+    def __getitem__(self, index: int):
+        hr_image = self.hr_transform(Image.open(self.hr_image_paths[index]))
+        lr_image = self.lr_transform(hr_image)
+        return lr_image, hr_image
 
     def __len__(self):
-        return len(self.lr_image_paths)
+        return len(self.hr_image_paths)
 
 
 def build_data_loader(config, data_type: str) -> DataLoader:
