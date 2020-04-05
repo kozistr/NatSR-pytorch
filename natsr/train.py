@@ -97,7 +97,12 @@ def natsr_trainer(config, model_type: str, device: str):
                 and global_step % config['aux']['logging_step'] == 0
             ):
                 print(
-                    f'[Epoch {epoch}/{end_epochs}] [Steps {global_step} [D loss: {d_loss.item()}] [G loss: {loss.item()}]'
+                    f'[Epoch {epoch}/{end_epochs}] '
+                    f'[Steps {global_step} '
+                    f'[total loss: {loss.item()}] '
+                    f'[adv loss: {g_loss.item()}] '
+                    f'[rec loss: {rec_loss.item()}] '
+                    f'[nat loss: {nat_loss.item()}]'
                 )
 
             if (
