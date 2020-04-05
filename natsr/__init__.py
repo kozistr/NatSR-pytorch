@@ -39,9 +39,9 @@ class AdvLossType(str, Enum):
     GAN = 'gan'
     DRAGAN = 'drgan'
     LSGAN = 'lsgan'
-    RAGAN = 'ragan'
     WGAN = 'wgan'
     WGANGP = 'wgan-gp'
+    WGANLP = 'wgan-lp'
     HINGE = 'hinge'
 
 
