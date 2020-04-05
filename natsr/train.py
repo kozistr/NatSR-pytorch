@@ -74,13 +74,17 @@ def natsr_trainer(config, model_type: str, device: str):
             )
 
             gen_optimizer.zero_grad()
-
-            sr = gen_network(lr)
-
             disc_optimizer.zero_grad()
 
+            sr = gen_network(lr)
+            d_real = disc_network(hr)
+            d_fake = disc_network(sr)
+
+            d_loss = adv_loss(d_real, real) + adv_loss(d_fake, fake)
+            g_loss = adv_loss(d_fake, real)
+
             loss = (
-                config['model'][ModelType.NATSR]['recon_weight'] * rec_loss
+                config['model'][ModelType.NATSR]['recon_weight'] * rec_loss(sr, hr)
                 + config['model'][ModelType.NATSR]['natural_weight'] * cls_loss
                 + config['model'][ModelType.NATSR]['generate_weight']
                 * adv_loss
