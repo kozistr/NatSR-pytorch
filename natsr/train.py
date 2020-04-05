@@ -1,8 +1,11 @@
 from natsr import ModelType
 from natsr.dataloader import build_loader
 from natsr.losses import (
-    build_classification_loss, build_reconstruction_loss, discriminator_loss,
-    generator_loss)
+    build_classification_loss,
+    build_reconstruction_loss,
+    discriminator_loss,
+    generator_loss,
+)
 from natsr.model import build_model
 from natsr.optimizers import build_optimizers
 from natsr.schedulers import build_lr_scheduler
