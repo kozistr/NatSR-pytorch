@@ -1,13 +1,13 @@
 import os
 import random
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 import torch
 import torch.nn as nn
 import yaml
 
-from natsr import DeviceType
+from natsr import DeviceType, ModelType
 
 
 def get_config(filename: str):
@@ -58,6 +58,26 @@ def load_model(filepath: str, model: nn.Module, device: str):
         print(f'[-] model is not loaded :(')
 
     return epoch
+
+
+def load_models(
+    config,
+    device: str,
+    gen_network: Optional[nn.Module],
+    disc_network: Optional[nn.Module],
+    nmd_network: Optional[nn.Module],
+) -> int:
+    start_epochs = load_model(
+        config['checkpoint']['nmd_model_path'], nmd_network, device
+    )
+    if config['model']['model_type'] == ModelType.NATSR:
+        start_epochs = load_model(
+            config['checkpoint']['gen_model_path'], gen_network, device
+        )
+        load_model(
+            config['checkpoint']['disc_model_path'], disc_network, device
+        )
+    return start_epochs
 
 
 def save_model(filepath: str, model: nn.Module, epoch: int):

@@ -125,9 +125,9 @@ def discriminator_loss(adv_loss_type: str, use_ra: bool, real, fake):
 
 def build_classification_loss(cls_loss_type: str):
     if cls_loss_type == ClsLossType.BCE:
-        return nn.BCELoss()
+        return nn.BCELoss(reduction='mean')
     if cls_loss_type == ClsLossType.CCE:
-        return nn.CrossEntropyLoss()
+        return nn.CrossEntropyLoss(reduction='mean')
     raise NotImplementedError(
         f'[-] not supported cls_loss_type : {cls_loss_type}'
     )
