@@ -37,10 +37,12 @@ class OptimizerType(str, Enum):
 @unique
 class AdvLossType(str, Enum):
     GAN = 'gan'
+    DRAGAN = 'drgan'
     LSGAN = 'lsgan'
     RAGAN = 'ragan'
     WGAN = 'wgan'
     WGANGP = 'wgan-gp'
+    HINGE = 'hinge'
 
 
 @unique
@@ -58,3 +60,9 @@ class RecLossType(str, Enum):
 @unique
 class LRSchedulerType(str, Enum):
     EXPONENTIAL = 'exponential'
+
+
+@unique
+class DeviceType(str, Enum):
+    CPU = 'cpu'
+    GPU = 'cuda'
