@@ -1,8 +1,14 @@
 # NatSR
 
-## Architecture
+## Proposed Architecture
 
 ### Explicitly Modeling the SISR & Designing Natural Manifold
+
+![img](/assets/designing_natural_manifold.png)
+
+As tons of `high-resolution` images can be correspond to one `low-resolution` image, so SISR task is *one-to-many problem*.
+
+They define & separate `high-resolution space` into the `3 subspaces`, *blurry space*, *natural space*, *noisy space*.
 
 ### Natural Manifold Discrimination (NMD)
 
@@ -13,4 +19,12 @@ Its' loss approach is like MinMax problem. Minimizing `unnatural manifold`, Maxi
 
 ### Natural & Realistic SISR (NatSR)
 
+![img](/assets/natsr_architecture.png)
+
+![img](/assets/overall_architecture.png)
+
 ## Experimental Results
+
+## Reference
+
+* Official Repository : [repo](https://github.com/JWSoh/NatSR/blob/master/README.md)
