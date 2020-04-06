@@ -70,8 +70,8 @@ class Generator(nn.Module):
         self.n_rd_blocks = self.config[ModelType.NATSR]['n_rd_blocks']
         self.nb_layers = self.config[ModelType.NATSR]['nb_layers']
 
-        self.head_conv = nn.Conv2d(self.channel, self.n_feats, kernel_size=3)
-        self.tail_conv = nn.Conv2d(self.n_feats, self.n_feats, kernel_size=3)
+        self.head_conv = nn.Conv2d(self.channel, self.n_feats, kernel_size=3, padding=1)
+        self.tail_conv = nn.Conv2d(self.n_feats, self.n_feats, kernel_size=3, padding=1)
         self.rgb_conv = nn.Conv2d(
             self.n_feats, self.channel, kernel_size=3, padding=1
         )
