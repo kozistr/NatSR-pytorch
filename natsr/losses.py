@@ -40,7 +40,7 @@ def generator_loss(adv_loss_type: str, use_ra: bool, real, fake):
             adv_loss_type == AdvLossType.GAN
             or adv_loss_type == AdvLossType.DRAGAN
         ):
-            fake_loss = -nn.BCELoss(reduction='mean')(
+            fake_loss = -nn.BCEWithLogitsLoss(reduction='mean')(
                 fake, torch.ones_like(fake)
             )
         elif (
@@ -74,10 +74,10 @@ def discriminator_loss(adv_loss_type: str, use_ra: bool, real, fake):
             adv_loss_type == AdvLossType.GAN
             or adv_loss_type == AdvLossType.DRAGAN
         ):
-            real_loss = nn.BCELoss(reduction='mean')(
+            real_loss = nn.BCEWithLogitsLoss(reduction='mean')(
                 real_logit, torch.ones_like(real_logit)
             )
-            fake_loss = nn.BCELoss(reduction='mean')(
+            fake_loss = nn.BCEWithLogitsLoss(reduction='mean')(
                 fake_logit, torch.zeros_like(fake_logit)
             )
         elif adv_loss_type == AdvLossType.LSGAN:
@@ -95,10 +95,10 @@ def discriminator_loss(adv_loss_type: str, use_ra: bool, real, fake):
             adv_loss_type == AdvLossType.GAN
             or adv_loss_type == AdvLossType.DRAGAN
         ):
-            real_loss = nn.BCELoss(reduction='mean')(
+            real_loss = nn.BCEWithLogitsLoss(reduction='mean')(
                 real, torch.ones_like(real)
             )
-            fake_loss = nn.BCELoss(reduction='mean')(
+            fake_loss = nn.BCEWithLogitsLoss(reduction='mean')(
                 fake, torch.zeros_like(fake)
             )
         elif (
