@@ -62,8 +62,8 @@ def natsr_trainer(config, model_type: str, device: str, summary):
     disc_lr_scheduler = build_lr_scheduler(config, model_type, disc_optimizer)
 
     recon_loss = build_reconstruction_loss(
-        config['model']['rec_loss_type']
-    ).to(device)
+        config['model']['rec_loss_type'], device
+    )
 
     gen_network.train()
     disc_network.train()
@@ -89,7 +89,7 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                 d_fake,
             ).to(device)
             nat_loss = natural_loss(nat).to(device)
-            rec_loss = recon_loss(sr, hr)
+            rec_loss = recon_loss(sr, hr.to(device))
 
             loss = (
                 config['model'][ModelType.NATSR]['recon_weight']
