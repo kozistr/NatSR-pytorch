@@ -75,7 +75,6 @@ def natsr_trainer(config, model_type: str, device: str, summary):
     for epoch in range(start_epochs, end_epochs):
         for lr, hr in train_loader:
             gen_optimizer.zero_grad()
-            disc_optimizer.zero_grad()
 
             sr = gen_network(lr.to(device))
             d_real = disc_network(hr.to(device))
@@ -92,13 +91,14 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             rec_loss = recon_loss(sr, hr.to(device))
 
             loss = (
-                config['model'][ModelType.NATSR]['loss']['recon_weight']
-                * rec_loss
+                config['model'][ModelType.NATSR]['loss']['recon_weight'] * rec_loss
                 + config['model'][ModelType.NATSR]['loss']['natural_weight'] * nat_loss
                 + config['model'][ModelType.NATSR]['loss']['generate_weight'] * g_loss
             )
-            loss.backward()
+            loss.backward(retain_graph=True)
             gen_optimizer.step()
+
+            disc_optimizer.zero_grad()
 
             d_loss = discriminator_loss(
                 config['model']['adv_loss_type'],
@@ -107,7 +107,7 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                 d_fake,
             ).to(device)
 
-            d_loss.backward()
+            d_loss.backward(retain_graph=True)
             disc_optimizer.step()
 
             if (
