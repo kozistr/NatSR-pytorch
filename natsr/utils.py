@@ -6,9 +6,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import yaml
-from tensorboardX import SummaryWriter
 
 from natsr import DeviceType, ModelType
+from tensorboardX import SummaryWriter
 
 
 def get_config(filename: str):

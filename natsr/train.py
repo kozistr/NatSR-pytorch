@@ -34,7 +34,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     nmd_network.train()
 
     for epoch in range(
-        start_epochs, config['model'][model_type]['epochs'] + 1
+            start_epochs, config['model'][model_type]['epochs'] + 1
     ):
         for lr, hr in train_loader:
             pass
@@ -87,7 +87,8 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             nat_loss = natural_loss(sr).to(device)
 
             loss = (
-                    config['model'][ModelType.NATSR]['recon_weight'] * recon_loss(sr, hr)
+                    config['model'][ModelType.NATSR]['recon_weight']
+                    * recon_loss(sr, hr)
                     + config['model'][ModelType.NATSR]['natural_weight'] * nat_loss
                     + config['model'][ModelType.NATSR]['generate_weight'] * g_loss
             )

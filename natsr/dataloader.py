@@ -1,11 +1,10 @@
 import os
 from glob import glob
-from math import sqrt
 from typing import List, Tuple
 
-import cv2
 import numpy as np
 from PIL import Image
+from math import sqrt
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import (
     Compose,
@@ -14,7 +13,6 @@ from torchvision.transforms import (
     ToPILImage,
     ToTensor,
 )
-from tqdm import tqdm
 
 from natsr import DataSets, DataType, ModelType
 from natsr.utils import is_gpu_available, is_valid_key
@@ -88,15 +86,6 @@ class DIV2KDataSet(Dataset):
             raise FileNotFoundError(
                 f'[-] there\'s no dataset at {dataset_path}'
             )
-
-    def _load_images(self) -> None:
-        self.lr_images = np.asarray(
-            [
-                cv2.imread(hr_image_path)[::-1]
-                for hr_image_path in tqdm(self.hr_image_paths)
-            ],
-            dtype=np.uint8,
-        )
 
     def __getitem__(self, index: int):
         hr_image = self.hr_transform(Image.open(self.hr_image_paths[index]))
