@@ -278,7 +278,7 @@ class Discriminator(nn.Module):
         x = self.act(x)
 
         x = self.conv6_1(x)
-        x = self.gap(x)
+        x = self.gap(x).view(-1, 1)
 
         return x
 
@@ -363,7 +363,7 @@ class NMD(nn.Module):
         x = self.max_pool(x)
 
         x = self.conv5_1(x)
-        x = self.gap(x)
+        x = self.gap(x).view(-1, 1)
 
         return x
 
