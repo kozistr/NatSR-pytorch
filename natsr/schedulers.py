@@ -5,7 +5,7 @@ from natsr import LRSchedulerType
 
 
 def build_lr_scheduler(config, model_type: str, optimizer: Optimizer):
-    lr_schedule_type: str = config['model']['lr_schedule_type']
+    lr_schedule_type: str = config['model'][model_type]['lr_schedule_type']
 
     if lr_schedule_type == LRSchedulerType.EXPONENTIAL:
         return ExponentialLR(

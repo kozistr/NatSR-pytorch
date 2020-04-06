@@ -62,13 +62,13 @@ class Generator(nn.Module):
         self.config = config['model']
 
         self.scale = scale
-        self.channel = self.config['model']['channel']
-        self.n_feats = self.config['model'][ModelType.NATSR]['n_feats']
-        self.n_rep_rd_blocks = self.config['model'][ModelType.NATSR][
+        self.channel = self.config[ModelType.NATSR]['channel']
+        self.n_feats = self.config[ModelType.NATSR]['n_feats']
+        self.n_rep_rd_blocks = self.config[ModelType.NATSR][
             'n_rep_rd_blocks'
         ]
-        self.n_rd_blocks = self.config['model'][ModelType.NATSR]['n_rd_blocks']
-        self.nb_layers = self.config['model'][ModelType.NATSR]['nb_blocks']
+        self.n_rd_blocks = self.config[ModelType.NATSR]['n_rd_blocks']
+        self.nb_layers = self.config[ModelType.NATSR]['nb_layers']
 
         self.head_conv = nn.Conv2d(self.channel, self.n_feats, kernel_size=3)
         self.tail_conv = nn.Conv2d(self.n_feats, self.n_feats, kernel_size=3)
@@ -88,7 +88,7 @@ class Generator(nn.Module):
 
         if self.scale == 4:
             n_pix_shuffle_feats: int = self.n_feats * (self.scale // 2) * (
-                self.scale // 2
+                    self.scale // 2
             )
 
             self.up_conv1 = nn.Conv2d(
@@ -151,14 +151,17 @@ class Generator(nn.Module):
 
         return x
 
+    def __str__(self):
+        return 'Generator'
+
 
 class Discriminator(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config['model']
 
-        self.channel = self.config['model']['channel']
-        self.n_feats = self.config['n_feats']
+        self.channel = self.config[ModelType.NATSR]['channel']
+        self.n_feats = self.config[ModelType.NATSR]['n_feats']
 
         self.conv1_1 = spectral_norm(
             nn.Conv2d(
@@ -247,9 +250,7 @@ class Discriminator(nn.Module):
     def _weight_initialize(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.xavier_normal(
-                    m.weight, mode='fan_in',
-                )
+                nn.init.xavier_normal_(m.weight)
 
     def forward(self, x):
         x = self.conv1_1(x)
@@ -282,14 +283,17 @@ class Discriminator(nn.Module):
 
         return x
 
+    def __str__(self):
+        return 'Discriminator'
+
 
 class NMD(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.config = config
+        self.config = config['model']
 
-        self.channel = self.config['model']['channel']
-        self.n_feats = self.config['model'][ModelType.NMD]['n_feats']
+        self.channel = self.config[ModelType.NMD]['channel']
+        self.n_feats = self.config[ModelType.NMD]['n_feats']
 
         self.conv1_1 = nn.Conv2d(
             self.channel, self.n_feats * 1, kernel_size=3, padding=1,
@@ -363,6 +367,9 @@ class NMD(nn.Module):
         x = self.gap(x)
 
         return x
+
+    def __str__(self):
+        return 'NMD'
 
 
 def build_model(config, model_type: str, device: str):

@@ -56,9 +56,9 @@ def load_model(filepath: str, model: nn.Module, device: str):
         except KeyError:
             model.load_state_dict(checkpoint)
 
-        print(f'[+] model {filepath} loaded! epoch : {epoch}')
+        print(f'[+] model {str(model)} ({filepath}) loaded! epoch : {epoch}')
     else:
-        print(f'[-] model is not loaded :(')
+        print(f'[-] model {str(model)} ({filepath}) is not loaded :(')
 
     return epoch, ssim
 
@@ -71,14 +71,14 @@ def load_models(
     nmd_network: Optional[nn.Module],
 ) -> Tuple[int, float]:
     start_epochs, ssim = load_model(
-        config['checkpoint']['nmd_model_path'], nmd_network, device
+        config['log']['checkpoint']['nmd_model_path'], nmd_network, device
     )
     if config['model']['model_type'] == ModelType.NATSR:
         start_epochs, ssim = load_model(
-            config['checkpoint']['gen_model_path'], gen_network, device
+            config['log']['checkpoint']['gen_model_path'], gen_network, device
         )
         load_model(
-            config['checkpoint']['disc_model_path'], disc_network, device
+            config['log']['checkpoint']['disc_model_path'], disc_network, device
         )
     return start_epochs, ssim
 
