@@ -27,7 +27,7 @@ class ResidualDenseBlock(nn.Module):
         )
         self.act = nn.ReLU()
         self.fusion_conv = nn.Conv2d(
-            self.n_feats * (self.nb_layers - 1),
+            self.n_feats * (self.nb_layers - 2) * (self.nb_layers - 3) // 2,
             self.n_feats,
             kernel_size=1,
             padding=0,
@@ -87,16 +87,15 @@ class Generator(nn.Module):
         )
 
         if self.scale == 4:
-            n_pix_shuffle_feats: int = self.n_feats * (self.scale // 2) * (
-                    self.scale // 2
-            )
-
+            n_ps_feats: int = self.n_feats * (self.scale // 2) * (self.scale // 2)
             self.up_conv1 = nn.Conv2d(
-                self.n_feats, n_pix_shuffle_feats, kernel_size=3, padding=1
+                self.n_feats,
+                n_ps_feats,
+                kernel_size=3, padding=1
             )
             self.up_conv2 = nn.Conv2d(
-                n_pix_shuffle_feats,
-                n_pix_shuffle_feats,
+                self.n_feats,
+                n_ps_feats,
                 kernel_size=3,
                 padding=1,
             )
@@ -114,22 +113,22 @@ class Generator(nn.Module):
         x_conv1 = self.head_conv(x)
 
         x = x_conv1
-        for i in range(self.n_rep_rd_blocks):
+        for i in range(self.n_rep_rd_blocks * 1):
             x = self.rd_blocks[i](x)
         x_conv2 = x + x_conv1
 
         x = x_conv2
-        for i in range(self.n_rep_rd_blocks):
+        for i in range(self.n_rep_rd_blocks * 1, self.n_rep_rd_blocks * 2):
             x = self.rd_blocks[i](x)
         x_conv3 = x + x_conv2 + x_conv1
 
         x = x_conv3
-        for i in range(self.n_rep_rd_blocks):
+        for i in range(self.n_rep_rd_blocks * 2, self.n_rep_rd_blocks * 3):
             x = self.rd_blocks[i](x)
         x_conv4 = x + x_conv3
 
         x = x_conv4
-        for i in range(self.n_rep_rd_blocks):
+        for i in range(self.n_rep_rd_blocks * 3, self.n_rep_rd_blocks * 4):
             x = self.rd_blocks[i](x)
         x_conv5 = x + x_conv4 + x_conv3 + x_conv1
 
