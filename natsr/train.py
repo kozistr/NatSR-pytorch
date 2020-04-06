@@ -92,10 +92,10 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             rec_loss = recon_loss(sr, hr.to(device))
 
             loss = (
-                config['model'][ModelType.NATSR]['recon_weight']
+                config['model'][ModelType.NATSR]['loss']['recon_weight']
                 * recon_loss
-                + config['model'][ModelType.NATSR]['natural_weight'] * nat_loss
-                + config['model'][ModelType.NATSR]['generate_weight'] * g_loss
+                + config['model'][ModelType.NATSR]['loss']['natural_weight'] * nat_loss
+                + config['model'][ModelType.NATSR]['loss']['generate_weight'] * g_loss
             )
             loss.backward()
             gen_optimizer.step()
