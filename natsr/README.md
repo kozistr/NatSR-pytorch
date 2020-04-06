@@ -25,6 +25,10 @@ Its' loss approach is like MinMax problem. Minimizing `unnatural manifold`, Maxi
 
 ## Experimental Results
 
+### FR-IQA Results
+
+![img](/assets/fr-iqa-results.png)
+
 ## Reference
 
 * Official Repository : [repo](https://github.com/JWSoh/NatSR/blob/master/README.md)
