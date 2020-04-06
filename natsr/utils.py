@@ -8,6 +8,7 @@ import torch.nn as nn
 import yaml
 
 from natsr import DeviceType, ModelType
+from tensorboardX import SummaryWriter
 
 
 def get_config(filename: str):
@@ -88,8 +89,17 @@ def save_model(
         'epoch': epoch,
     }
     if ssim_score:
-        model_info.update(
-            {'ssim': ssim_score,}
-        )
+        model_info.update({'ssim': ssim_score})
 
     torch.save(model_info, filepath)
+
+
+def build_summary_writer(config):
+    log_dir: str = config['log']['log_dir']
+    model_type: str = config['model']['model_type']
+    return SummaryWriter(logdir=os.path.join(log_dir, model_type))
+
+
+def log_summary(summary, data, global_step: int):
+    for k, v in data.item():
+        summary.add_scalar(k, v, global_step)

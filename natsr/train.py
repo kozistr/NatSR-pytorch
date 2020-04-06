@@ -9,10 +9,10 @@ from natsr.losses import (
 from natsr.model import build_model
 from natsr.optimizers import build_optimizers
 from natsr.schedulers import build_lr_scheduler
-from natsr.utils import load_models
+from natsr.utils import build_summary_writer, load_models, log_summary
 
 
-def nmd_trainer(config, model_type: str, device: str):
+def nmd_trainer(config, model_type: str, device: str, summary):
     train_loader, valid_loader = build_loader(config)
 
     nmd_network = build_model(config, model_type, device)
@@ -33,7 +33,7 @@ def nmd_trainer(config, model_type: str, device: str):
             pass
 
 
-def natsr_trainer(config, model_type: str, device: str):
+def natsr_trainer(config, model_type: str, device: str, summary):
     train_loader, valid_loader = build_loader(config)
 
     gen_network, disc_network, nmd_network = build_model(
@@ -97,16 +97,17 @@ def natsr_trainer(config, model_type: str, device: str):
 
             if (
                 global_step
-                and global_step % config['aux']['logging_step'] == 0
+                and global_step % config['log']['logging_step'] == 0
             ):
-                print(
-                    f'[Epoch {epoch}/{end_epochs}] '
-                    f'[Steps {global_step} '
-                    f'[total loss: {loss.item()}] '
-                    f'[adv loss: {g_loss.item()}] '
-                    f'[rec loss: {rec_loss.item()}] '
-                    f'[nat loss: {nat_loss.item()}]'
-                )
+                logs = {
+                    'loss/total_loss': loss.item(),
+                    'loss/adv_loss': g_loss.item(),
+                    'loss/rec_loss': rec_loss.item(),
+                    'loss/nat_loss': nat_loss.item(),
+                    'aux/g_lr': gen_lr_scheduler.get_lr(),
+                    'aux/d_lr': disc_lr_scheduler.get_lr(),
+                }
+                log_summary(summary, logs, global_step)
 
             if (
                 global_step
@@ -124,8 +125,10 @@ def train(config):
     model_type: str = config['model']['model_type']
     device: str = config['aux']['device']
 
+    summary = build_summary_writer(config)
+
     if model_type == ModelType.NATSR:
-        natsr_trainer(config, model_type, device)
+        natsr_trainer(config, model_type, device, summary)
     if model_type == ModelType.NMD:
-        nmd_trainer(config, model_type, device)
+        nmd_trainer(config, model_type, device, summary)
     raise NotImplementedError(f'[-] not supported modeL_type : {model_type}')

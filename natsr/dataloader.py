@@ -31,7 +31,7 @@ def get_valid_crop_size(crop_size: int, scale: int) -> int:
 
 
 def hr_transform(crop_size: int):
-    return Compose([RandomCrop(crop_size), ToTensor(),])
+    return Compose([RandomCrop(crop_size), ToTensor()])
 
 
 def lr_transform(crop_size: int, scale: int):
