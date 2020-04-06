@@ -45,8 +45,9 @@ def lr_transform(crop_size: int, scale: int):
 class DIV2KDataSet(Dataset):
     def __init__(self, config, data_type: str):
         self.config = config
+
         self.scale_factor: int = get_scale_factor(
-            config['data'][data_type]['scale']
+            config['data'][DataSets.DIV2K]['scale']
         )
         self.crop_size: int = get_valid_crop_size(
             config['model'][ModelType.NATSR]['height'], self.scale_factor
@@ -60,28 +61,20 @@ class DIV2KDataSet(Dataset):
 
         self._get_image_paths(data_type=data_type)
 
-    def _get_image_paths(self, data_type: str = DataType.TRAIN) -> None:
-        dataset_type: str = self.config['data']['dataset_type']
-        scale: int = self.config['data']['div2k']['scale']
-        interp: str = self.config['data']['div2k']['interpolation']
+    def _get_image_paths(self, data_type: str) -> None:
+        dataset_path: str = self.config['data'][DataSets.DIV2K]['dataset_path']
 
-        if not is_valid_key(self.config['data'], dataset_type):
-            raise NotImplementedError(
-                f'[-] not supported dataset_type : {dataset_type}'
-            )
-
-        dataset_path: str = self.config['data'][dataset_type]['dataset_path']
         if os.path.exists(dataset_path):
             self.hr_image_paths = sorted(
                 glob(
                     os.path.join(
                         dataset_path,
-                        f'DIV2K_{data_type}_HR_{interp}',
-                        f'X{scale}',
+                        f'DIV2K_{data_type}_HR',
                         '*.png',
                     )
                 )
             )
+            print(self.hr_image_paths)
         else:
             raise FileNotFoundError(
                 f'[-] there\'s no dataset at {dataset_path}'
@@ -125,6 +118,6 @@ def build_data_loader(config, data_type: str) -> DataLoader:
 
 
 def build_loader(config) -> Tuple[DataLoader, DataLoader]:
-    train_data_loader = build_data_loader(config, data_type=DataType.TRAIN)
-    valid_data_loader = build_data_loader(config, data_type=DataType.VALID)
+    train_data_loader = build_data_loader(config, data_type=DataType.TRAIN.value)
+    valid_data_loader = build_data_loader(config, data_type=DataType.VALID.value)
     return train_data_loader, valid_data_loader
