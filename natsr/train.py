@@ -43,17 +43,16 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 def natsr_trainer(config, model_type: str, device: str, summary):
     train_loader, valid_loader = build_loader(config)
 
-    gen_network, disc_network, nmd_network = build_model(
+    gen_network, disc_network, _ = build_model(
         config, model_type, device
     )
     start_epochs, start_ssim = load_models(
-        config, device, gen_network, disc_network, nmd_network
+        config, device, gen_network, disc_network, None
     )
     end_epochs: int = config['model'][model_type]['epochs'] + 1
 
-    gen_network.to(device)
-    disc_network.to(device)
-    nmd_network.to(device)
+    gen_network = gen_network.to(device)
+    disc_network = disc_network.to(device)
 
     gen_optimizer = build_optimizers(config, model_type, gen_network)
     gen_lr_scheduler = build_lr_scheduler(config, model_type, gen_optimizer)
@@ -77,8 +76,8 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             gen_optimizer.zero_grad()
             disc_optimizer.zero_grad()
 
-            sr = gen_network(lr)
-            d_real = disc_network(hr)
+            sr = gen_network(lr.to(device))
+            d_real = disc_network(hr.to(device))
             d_fake = disc_network(sr)
 
             g_loss = generator_loss(
@@ -90,10 +89,10 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             nat_loss = natural_loss(sr).to(device)
 
             loss = (
-                    config['model'][ModelType.NATSR]['recon_weight']
-                    * recon_loss(sr, hr)
-                    + config['model'][ModelType.NATSR]['natural_weight'] * nat_loss
-                    + config['model'][ModelType.NATSR]['generate_weight'] * g_loss
+                config['model'][ModelType.NATSR]['recon_weight']
+                * recon_loss(sr, hr)
+                + config['model'][ModelType.NATSR]['natural_weight'] * nat_loss
+                + config['model'][ModelType.NATSR]['generate_weight'] * g_loss
             )
             loss.backward()
             gen_optimizer.step()
@@ -109,8 +108,7 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             disc_optimizer.step()
 
             if (
-                    global_step
-                    and global_step % config['log']['logging_step'] == 0
+                 global_step % config['log']['logging_step'] == 0
             ):
                 gen_network.eval()
                 disc_network.eval()
@@ -131,8 +129,8 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                     curr_ssim = np.mean(
                         [
                             ssim(
-                                tensor_to_numpy(torch.clamp(0.0, 1.0, _sr)),
-                                tensor_to_numpy(torch.clamp(0.0, 1.0, _hr)),
+                                tensor_to_numpy(torch.clamp(0.0, 1.0, _sr.to(device))),
+                                tensor_to_numpy(torch.clamp(0.0, 1.0, _hr.to(device))),
                             )
                             for _sr, _hr in zip(gen_network(val_lr), val_hr)
                             for val_lr, val_hr in valid_loader

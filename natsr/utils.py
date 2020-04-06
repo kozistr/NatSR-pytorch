@@ -73,13 +73,15 @@ def load_models(
     start_epochs, ssim = load_model(
         config['log']['checkpoint']['nmd_model_path'], nmd_network, device
     )
+
     if config['model']['model_type'] == ModelType.NATSR:
         start_epochs, ssim = load_model(
             config['log']['checkpoint']['gen_model_path'], gen_network, device
         )
-        load_model(
+        _, _ = load_model(
             config['log']['checkpoint']['disc_model_path'], disc_network, device
         )
+
     return start_epochs, ssim
 
 
