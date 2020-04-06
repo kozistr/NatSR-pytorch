@@ -4,10 +4,10 @@ import torch
 from natsr import ModelType
 from natsr.dataloader import build_loader
 from natsr.losses import (
-    build_classification_loss,
     build_reconstruction_loss,
     discriminator_loss,
     generator_loss,
+    natural_loss,
 )
 from natsr.metrics import ssim
 from natsr.model import build_model
@@ -25,15 +25,11 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     train_loader, valid_loader = build_loader(config)
 
     nmd_network = build_model(config, model_type, device)
-    start_epochs = load_models(
+    start_epochs, _ = load_models(
         config['checkpoint']['nmd_model_path'], device, None, None, nmd_network
     )
 
     nmd_optimizer = build_optimizers(config, model_type, nmd_network)
-
-    cls_loss = build_classification_loss(config['model']['cls_loss_type']).to(
-        device
-    )
 
     nmd_network.train()
 
@@ -65,9 +61,6 @@ def natsr_trainer(config, model_type: str, device: str, summary):
     recon_loss = build_reconstruction_loss(
         config['model']['rec_loss_type']
     ).to(device)
-    cls_loss = build_classification_loss(config['model']['cls_loss_type']).to(
-        device
-    )
 
     gen_network.train()
     disc_network.train()
@@ -91,13 +84,12 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                 d_real,
                 d_fake,
             ).to(device)
-            rec_loss = recon_loss(sr, hr)
-            nat_loss = cls_loss(sr)
+            nat_loss = natural_loss(sr).to(device)
 
             loss = (
-                config['model'][ModelType.NATSR]['recon_weight'] * rec_loss
-                + config['model'][ModelType.NATSR]['natural_weight'] * nat_loss
-                + config['model'][ModelType.NATSR]['generate_weight'] * g_loss
+                    config['model'][ModelType.NATSR]['recon_weight'] * recon_loss(sr, hr)
+                    + config['model'][ModelType.NATSR]['natural_weight'] * nat_loss
+                    + config['model'][ModelType.NATSR]['generate_weight'] * g_loss
             )
             loss.backward()
             gen_optimizer.step()
@@ -113,8 +105,8 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             disc_optimizer.step()
 
             if (
-                global_step
-                and global_step % config['log']['logging_step'] == 0
+                    global_step
+                    and global_step % config['log']['logging_step'] == 0
             ):
                 gen_network.eval()
                 disc_network.eval()
@@ -155,10 +147,10 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                 disc_network.train()
 
             if (
-                global_step
-                and global_step
-                % config['model'][ModelType.NATSR]['lr_decay_steps']
-                == 0
+                    global_step
+                    and global_step
+                    % config['model'][ModelType.NATSR]['lr_decay_steps']
+                    == 0
             ):
                 gen_lr_scheduler.step()
                 disc_lr_scheduler.step()
