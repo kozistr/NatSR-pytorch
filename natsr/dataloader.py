@@ -74,7 +74,6 @@ class DIV2KDataSet(Dataset):
                     )
                 )
             )
-            print(self.hr_image_paths)
         else:
             raise FileNotFoundError(
                 f'[-] there\'s no dataset at {dataset_path}'
