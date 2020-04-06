@@ -80,5 +80,16 @@ def load_models(
     return start_epochs
 
 
-def save_model(filepath: str, model: nn.Module, epoch: int):
-    torch.save({'model': model.state_dict(), 'epoch': epoch}, filepath)
+def save_model(
+    filepath: str, model: nn.Module, epoch: int, ssim_score: Optional[float]
+):
+    model_info = {
+        'model': model.state_dict(),
+        'epoch': epoch,
+    }
+    if ssim_score:
+        model_info.update(
+            {'ssim': ssim_score,}
+        )
+
+    torch.save(model_info, filepath)
