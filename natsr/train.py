@@ -87,10 +87,11 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                 d_fake,
             ).to(device)
             nat_loss = natural_loss(sr).to(device)
+            rec_loss = recon_loss(sr, hr)
 
             loss = (
                 config['model'][ModelType.NATSR]['recon_weight']
-                * recon_loss(sr, hr)
+                * recon_loss
                 + config['model'][ModelType.NATSR]['natural_weight'] * nat_loss
                 + config['model'][ModelType.NATSR]['generate_weight'] * g_loss
             )
