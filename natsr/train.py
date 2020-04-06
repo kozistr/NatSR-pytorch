@@ -43,16 +43,17 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 def natsr_trainer(config, model_type: str, device: str, summary):
     train_loader, valid_loader = build_loader(config)
 
-    gen_network, disc_network, _ = build_model(
+    gen_network, disc_network, nmd_network = build_model(
         config, model_type, device
     )
     start_epochs, start_ssim = load_models(
-        config, device, gen_network, disc_network, None
+        config, device, gen_network, disc_network, nmd_network
     )
     end_epochs: int = config['model'][model_type]['epochs'] + 1
 
     gen_network = gen_network.to(device)
     disc_network = disc_network.to(device)
+    nmd_network = nmd_network.to(device)
 
     gen_optimizer = build_optimizers(config, model_type, gen_network)
     gen_lr_scheduler = build_lr_scheduler(config, model_type, gen_optimizer)
@@ -79,6 +80,7 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             sr = gen_network(lr.to(device))
             d_real = disc_network(hr.to(device))
             d_fake = disc_network(sr)
+            nat = nmd_network(sr)
 
             g_loss = generator_loss(
                 config['model']['adv_loss_type'],
@@ -86,7 +88,7 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                 d_real,
                 d_fake,
             ).to(device)
-            nat_loss = natural_loss(sr).to(device)
+            nat_loss = natural_loss(nat).to(device)
             rec_loss = recon_loss(sr, hr)
 
             loss = (
