@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import torch
@@ -44,6 +44,7 @@ def is_gpu_available() -> bool:
 
 def load_model(filepath: str, model: nn.Module, device: str):
     epoch: int = 1
+    ssim: float = 0.0
 
     if os.path.exists(filepath):
         checkpoint = torch.load(filepath, map_location=device)
@@ -51,6 +52,7 @@ def load_model(filepath: str, model: nn.Module, device: str):
         try:
             model.load_state_dict(checkpoint['model'])
             epoch = checkpoint['epoch']
+            ssim = checkpoint['ssim']
         except KeyError:
             model.load_state_dict(checkpoint)
 
@@ -58,7 +60,7 @@ def load_model(filepath: str, model: nn.Module, device: str):
     else:
         print(f'[-] model is not loaded :(')
 
-    return epoch
+    return epoch, ssim
 
 
 def load_models(
@@ -67,29 +69,29 @@ def load_models(
     gen_network: Optional[nn.Module],
     disc_network: Optional[nn.Module],
     nmd_network: Optional[nn.Module],
-) -> int:
-    start_epochs = load_model(
+) -> Tuple[int, float]:
+    start_epochs, ssim = load_model(
         config['checkpoint']['nmd_model_path'], nmd_network, device
     )
     if config['model']['model_type'] == ModelType.NATSR:
-        start_epochs = load_model(
+        start_epochs, ssim = load_model(
             config['checkpoint']['gen_model_path'], gen_network, device
         )
         load_model(
             config['checkpoint']['disc_model_path'], disc_network, device
         )
-    return start_epochs
+    return start_epochs, ssim
 
 
 def save_model(
-    filepath: str, model: nn.Module, epoch: int, ssim_score: Optional[float]
+    filepath: str, model: nn.Module, epoch: int, ssim: Optional[float]
 ):
     model_info = {
         'model': model.state_dict(),
         'epoch': epoch,
     }
-    if ssim_score:
-        model_info.update({'ssim': ssim_score})
+    if ssim:
+        model_info.update({'ssim': ssim})
 
     torch.save(model_info, filepath)
 
@@ -102,4 +104,11 @@ def build_summary_writer(config):
 
 def log_summary(summary, data, global_step: int):
     for k, v in data.item():
-        summary.add_scalar(k, v, global_step)
+        if k.startswith('loss') or k.startswith('aux'):
+            summary.add_scalar(k, v, global_step)
+        else:
+            summary.add_image(k, v, global_step)
+
+
+def tensor_to_numpy(x: torch.Tensor) -> np.ndarray:
+    return x.cpu().data.numpy()

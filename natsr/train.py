@@ -1,3 +1,6 @@
+import numpy as np
+import torch
+
 from natsr import ModelType
 from natsr.dataloader import build_loader
 from natsr.losses import (
@@ -6,10 +9,16 @@ from natsr.losses import (
     discriminator_loss,
     generator_loss,
 )
+from natsr.metrics import ssim
 from natsr.model import build_model
 from natsr.optimizers import build_optimizers
 from natsr.schedulers import build_lr_scheduler
-from natsr.utils import build_summary_writer, load_models, log_summary
+from natsr.utils import (
+    build_summary_writer,
+    load_models,
+    log_summary,
+    tensor_to_numpy,
+)
 
 
 def nmd_trainer(config, model_type: str, device: str, summary):
@@ -26,6 +35,8 @@ def nmd_trainer(config, model_type: str, device: str, summary):
         device
     )
 
+    nmd_network.train()
+
     for epoch in range(
         start_epochs, config['model'][model_type]['epochs'] + 1
     ):
@@ -40,7 +51,7 @@ def natsr_trainer(config, model_type: str, device: str, summary):
         config, model_type, device
     )
 
-    start_epochs: int = load_models(
+    start_epochs, start_ssim = load_models(
         config, device, gen_network, disc_network, nmd_network
     )
     end_epochs: int = config['model'][model_type]['epochs'] + 1
@@ -58,6 +69,10 @@ def natsr_trainer(config, model_type: str, device: str, summary):
         device
     )
 
+    gen_network.train()
+    disc_network.train()
+
+    best_ssim: float = start_ssim
     global_step: int = start_epochs * len(
         train_loader
     ) // train_loader.batch_size
@@ -77,7 +92,7 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                 d_fake,
             ).to(device)
             rec_loss = recon_loss(sr, hr)
-            nat_loss = cls_loss()
+            nat_loss = cls_loss(sr)
 
             loss = (
                 config['model'][ModelType.NATSR]['recon_weight'] * rec_loss
@@ -101,6 +116,9 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                 global_step
                 and global_step % config['log']['logging_step'] == 0
             ):
+                gen_network.eval()
+                disc_network.eval()
+
                 logs = {
                     'loss/total_loss': loss.item(),
                     'loss/adv_loss': g_loss.item(),
@@ -108,8 +126,33 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                     'loss/nat_loss': nat_loss.item(),
                     'aux/g_lr': gen_lr_scheduler.get_lr(),
                     'aux/d_lr': disc_lr_scheduler.get_lr(),
+                    'sr': torch.clamp(0.0, 1.0, sr),
+                    'hr': torch.clamp(0.0, 1.0, hr),
                 }
                 log_summary(summary, logs, global_step)
+
+                with torch.no_grad():
+                    curr_ssim = np.mean(
+                        [
+                            ssim(
+                                tensor_to_numpy(torch.clamp(0.0, 1.0, _sr)),
+                                tensor_to_numpy(torch.clamp(0.0, 1.0, _hr)),
+                            )
+                            for _sr, _hr in zip(gen_network(val_lr), val_hr)
+                            for val_lr, val_hr in valid_loader
+                        ],
+                        dtype=np.float32,
+                    )
+
+                if curr_ssim > best_ssim:
+                    print(
+                        f'[{epoch}/{end_epochs}] [{global_step} steps] '
+                        f'SSIM improved from {curr_ssim} to {best_ssim}'
+                    )
+                    best_ssim = curr_ssim
+
+                gen_network.train()
+                disc_network.train()
 
             if (
                 global_step
