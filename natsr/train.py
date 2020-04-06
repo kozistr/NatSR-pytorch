@@ -58,7 +58,9 @@ def natsr_trainer(config, model_type: str, device: str, summary):
         device
     )
 
-    global_step: int = 0
+    global_step: int = start_epochs * len(
+        train_loader
+    ) // train_loader.batch_size
     for epoch in range(start_epochs, end_epochs):
         for lr, hr in train_loader:
             gen_optimizer.zero_grad()
