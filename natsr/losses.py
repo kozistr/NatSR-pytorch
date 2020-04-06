@@ -19,10 +19,10 @@ def generator_loss(adv_loss_type: str, use_ra: bool, real, fake):
             adv_loss_type == AdvLossType.GAN
             or adv_loss_type == AdvLossType.DRAGAN
         ):
-            real_loss = nn.BCELoss(reduction='mean')(
+            real_loss = nn.BCEWithLogitsLoss(reduction='mean')(
                 real_logit, torch.zeros_like(real_logit)
             )
-            fake_loss = nn.BCELoss(reduction='mean')(
+            fake_loss = nn.BCEWithLogitsLoss(reduction='mean')(
                 fake_logit, torch.ones_like(fake_logit)
             )
         elif adv_loss_type == AdvLossType.LSGAN:
@@ -127,21 +127,21 @@ def natural_loss(x: torch.Tensor, eps: float = 1e-10):
     return -torch.mean(torch.log(x + eps))
 
 
-def build_classification_loss(cls_loss_type: str):
+def build_classification_loss(cls_loss_type: str, device: str):
     if cls_loss_type == ClsLossType.BCE:
-        return nn.BCELoss(reduction='mean')
+        return nn.BCELoss(reduction='mean').to(device)
     if cls_loss_type == ClsLossType.CCE:
-        return nn.CrossEntropyLoss(reduction='mean')
+        return nn.CrossEntropyLoss(reduction='mean').to(device)
     raise NotImplementedError(
         f'[-] not supported cls_loss_type : {cls_loss_type}'
     )
 
 
-def build_reconstruction_loss(rec_loss_type: str):
+def build_reconstruction_loss(rec_loss_type: str, device: str):
     if rec_loss_type == RecLossType.L1:
-        return nn.L1Loss()
+        return nn.L1Loss(reduction='mean').to(device)
     if rec_loss_type == RecLossType.L2:
-        return nn.MSELoss()
+        return nn.MSELoss(reduction='mean').to(device)
     raise NotImplementedError(
         f'[-] not supported adv_loss_type : {rec_loss_type}'
     )
