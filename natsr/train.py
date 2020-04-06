@@ -46,11 +46,14 @@ def natsr_trainer(config, model_type: str, device: str, summary):
     gen_network, disc_network, nmd_network = build_model(
         config, model_type, device
     )
-
     start_epochs, start_ssim = load_models(
         config, device, gen_network, disc_network, nmd_network
     )
     end_epochs: int = config['model'][model_type]['epochs'] + 1
+
+    gen_network.to(device)
+    disc_network.to(device)
+    nmd_network.to(device)
 
     gen_optimizer = build_optimizers(config, model_type, gen_network)
     gen_lr_scheduler = build_lr_scheduler(config, model_type, gen_optimizer)
