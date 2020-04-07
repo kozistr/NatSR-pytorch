@@ -17,6 +17,7 @@ from natsr.utils import (
     build_summary_writer,
     load_models,
     log_summary,
+    save_model,
     tensor_to_numpy,
 )
 
@@ -140,6 +141,25 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                         f'SSIM improved from {curr_ssim} to {best_ssim}'
                     )
                     best_ssim = curr_ssim
+
+                    save_model(
+                        config['log']['checkpoint']['gen_model_path'],
+                        gen_network,
+                        epoch,
+                        best_ssim,
+                    )
+                    save_model(
+                        config['log']['checkpoint']['disc_model_path'],
+                        disc_network,
+                        epoch,
+                        best_ssim,
+                    )
+                    save_model(
+                        config['log']['checkpoint']['nmd_model_path'],
+                        nmd_network,
+                        epoch,
+                        best_ssim,
+                    )
 
                 logs = {
                     'loss/total_loss': loss.item(),
