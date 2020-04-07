@@ -34,7 +34,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     nmd_network.train()
 
     for epoch in range(
-            start_epochs, config['model'][model_type]['epochs'] + 1
+        start_epochs, config['model'][model_type]['epochs'] + 1
     ):
         for lr, hr in train_loader:
             pass
@@ -91,9 +91,12 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             rec_loss = recon_loss(sr, hr.to(device))
 
             loss = (
-                config['model'][ModelType.NATSR]['loss']['recon_weight'] * rec_loss
-                + config['model'][ModelType.NATSR]['loss']['natural_weight'] * nat_loss
-                + config['model'][ModelType.NATSR]['loss']['generate_weight'] * g_loss
+                config['model'][ModelType.NATSR]['loss']['recon_weight']
+                * rec_loss
+                + config['model'][ModelType.NATSR]['loss']['natural_weight']
+                * nat_loss
+                + config['model'][ModelType.NATSR]['loss']['generate_weight']
+                * g_loss
             )
             loss.backward(retain_graph=True)
             gen_optimizer.step()
@@ -110,30 +113,20 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             d_loss.backward(retain_graph=True)
             disc_optimizer.step()
 
-            if (
-                 global_step % config['log']['logging_step'] == 0
-            ):
+            if global_step % config['log']['logging_step'] == 0:
                 gen_network.eval()
                 disc_network.eval()
-
-                logs = {
-                    'loss/total_loss': loss.item(),
-                    'loss/adv_loss': g_loss.item(),
-                    'loss/rec_loss': rec_loss.item(),
-                    'loss/nat_loss': nat_loss.item(),
-                    'aux/g_lr': gen_lr_scheduler.get_lr(),
-                    'aux/d_lr': disc_lr_scheduler.get_lr(),
-                    'sr': torch.clamp(0.0, 1.0, sr),
-                    'hr': torch.clamp(0.0, 1.0, hr),
-                }
-                log_summary(summary, logs, global_step)
 
                 with torch.no_grad():
                     curr_ssim = np.mean(
                         [
                             ssim(
-                                tensor_to_numpy(torch.clamp(0.0, 1.0, _sr.to(device))),
-                                tensor_to_numpy(torch.clamp(0.0, 1.0, _hr.to(device))),
+                                tensor_to_numpy(
+                                    torch.clamp(0.0, 1.0, _sr.to(device))
+                                ),
+                                tensor_to_numpy(
+                                    torch.clamp(0.0, 1.0, _hr.to(device))
+                                ),
                             )
                             for _sr, _hr in zip(gen_network(val_lr), val_hr)
                             for val_lr, val_hr in valid_loader
@@ -148,14 +141,27 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                     )
                     best_ssim = curr_ssim
 
+                logs = {
+                    'loss/total_loss': loss.item(),
+                    'loss/adv_loss': g_loss.item(),
+                    'loss/rec_loss': rec_loss.item(),
+                    'loss/nat_loss': nat_loss.item(),
+                    'metric/ssim': best_ssim,
+                    'aux/g_lr': gen_lr_scheduler.get_lr(),
+                    'aux/d_lr': disc_lr_scheduler.get_lr(),
+                    'sr': torch.clamp(0.0, 1.0, sr),
+                    'hr': torch.clamp(0.0, 1.0, hr),
+                }
+                log_summary(summary, logs, global_step)
+
                 gen_network.train()
                 disc_network.train()
 
             if (
-                    global_step
-                    and global_step
-                    % config['model'][ModelType.NATSR]['lr_decay_steps']
-                    == 0
+                global_step
+                and global_step
+                % config['model'][ModelType.NATSR]['lr_decay_steps']
+                == 0
             ):
                 gen_lr_scheduler.step()
                 disc_lr_scheduler.step()
