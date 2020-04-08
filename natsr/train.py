@@ -129,8 +129,8 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                                     torch.clamp(0.0, 1.0, _hr.to(device))
                                 ),
                             )
-                            for _sr, _hr in zip(gen_network(val_lr), val_hr)
                             for val_lr, val_hr in valid_loader
+                            for _sr, _hr in zip(gen_network(val_lr), val_hr)
                         ],
                         dtype=np.float32,
                     )
