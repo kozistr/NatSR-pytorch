@@ -64,14 +64,16 @@ class Generator(nn.Module):
         self.scale = scale
         self.channel = self.config[ModelType.NATSR]['channel']
         self.n_feats = self.config[ModelType.NATSR]['n_feats']
-        self.n_rep_rd_blocks = self.config[ModelType.NATSR][
-            'n_rep_rd_blocks'
-        ]
+        self.n_rep_rd_blocks = self.config[ModelType.NATSR]['n_rep_rd_blocks']
         self.n_rd_blocks = self.config[ModelType.NATSR]['n_rd_blocks']
         self.nb_layers = self.config[ModelType.NATSR]['nb_layers']
 
-        self.head_conv = nn.Conv2d(self.channel, self.n_feats, kernel_size=3, padding=1)
-        self.tail_conv = nn.Conv2d(self.n_feats, self.n_feats, kernel_size=3, padding=1)
+        self.head_conv = nn.Conv2d(
+            self.channel, self.n_feats, kernel_size=3, padding=1
+        )
+        self.tail_conv = nn.Conv2d(
+            self.n_feats, self.n_feats, kernel_size=3, padding=1
+        )
         self.rgb_conv = nn.Conv2d(
             self.n_feats, self.channel, kernel_size=3, padding=1
         )
@@ -87,17 +89,14 @@ class Generator(nn.Module):
         )
 
         if self.scale == 4:
-            n_ps_feats: int = self.n_feats * (self.scale // 2) * (self.scale // 2)
+            n_ps_feats: int = self.n_feats * (self.scale // 2) * (
+                self.scale // 2
+            )
             self.up_conv1 = nn.Conv2d(
-                self.n_feats,
-                n_ps_feats,
-                kernel_size=3, padding=1
+                self.n_feats, n_ps_feats, kernel_size=3, padding=1
             )
             self.up_conv2 = nn.Conv2d(
-                self.n_feats,
-                n_ps_feats,
-                kernel_size=3,
-                padding=1,
+                self.n_feats, n_ps_feats, kernel_size=3, padding=1,
             )
             self.pixel_shuffle = nn.PixelShuffle(self.scale // 2)
         else:

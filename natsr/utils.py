@@ -6,9 +6,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import yaml
+from tensorboardX import SummaryWriter
 
 from natsr import DeviceType, ModelType
-from tensorboardX import SummaryWriter
 
 
 def get_config(filename: str):
@@ -79,7 +79,9 @@ def load_models(
             config['log']['checkpoint']['gen_model_path'], gen_network, device
         )
         _, _ = load_model(
-            config['log']['checkpoint']['disc_model_path'], disc_network, device
+            config['log']['checkpoint']['disc_model_path'],
+            disc_network,
+            device,
         )
 
     return start_epochs, ssim

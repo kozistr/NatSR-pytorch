@@ -1,10 +1,10 @@
 import os
 from glob import glob
+from math import sqrt
 from typing import List, Tuple
 
 import numpy as np
 from PIL import Image
-from math import sqrt
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import (
     Compose,
@@ -68,9 +68,7 @@ class DIV2KDataSet(Dataset):
             self.hr_image_paths = sorted(
                 glob(
                     os.path.join(
-                        dataset_path,
-                        f'DIV2K_{data_type}_HR',
-                        '*.png',
+                        dataset_path, f'DIV2K_{data_type}_HR', '*.png',
                     )
                 )
             )
@@ -117,6 +115,10 @@ def build_data_loader(config, data_type: str) -> DataLoader:
 
 
 def build_loader(config) -> Tuple[DataLoader, DataLoader]:
-    train_data_loader = build_data_loader(config, data_type=DataType.TRAIN.value)
-    valid_data_loader = build_data_loader(config, data_type=DataType.VALID.value)
+    train_data_loader = build_data_loader(
+        config, data_type=DataType.TRAIN.value
+    )
+    valid_data_loader = build_data_loader(
+        config, data_type=DataType.VALID.value
+    )
     return train_data_loader, valid_data_loader
