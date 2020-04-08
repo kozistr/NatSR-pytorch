@@ -130,7 +130,7 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                                 ),
                             )
                             for val_lr, val_hr in valid_loader
-                            for _sr, _hr in zip(gen_network(val_lr), val_hr)
+                            for _sr, _hr in zip(gen_network(val_lr.to(device)), val_hr)
                         ],
                         dtype=np.float32,
                     )
