@@ -38,9 +38,9 @@ model:
     loss:
       # distortion-oriented (FRSR)  : 1, 0, 0
       # perception-oriented (NatSR) : 1, 1e-3, 1e-3
-      recon_weight: 1        # lambda_1
-      natural_weight: 1e-3   # lambda_2
-      generate_weight: 1e-3  # lambda_3
+      recon_weight: 1         # lambda_1
+      natural_weight: 0.001   # lambda_2
+      generate_weight: 0.001  # lambda_3
   nmd:
     height: 144
     width: 144
