@@ -161,6 +161,10 @@ def inject_dct_8x8(x, sigma: float):
     return inv_x
 
 
+def get_interpolation(img1, img2, alpha: float):
+    return alpha * img1 + (1.0 - alpha) * img2
+
+
 def get_noisy(img, sigma: float):
     dct_img = inject_dct_8x8(tensor_to_numpy(img), sigma)
     dct_img = torch.from_numpy(dct_img).float().to(img.device)
