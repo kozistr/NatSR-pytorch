@@ -41,35 +41,23 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
     nmd_network.train()
 
-    global_step: int = start_epochs * len(
-        train_loader
-    ) // train_loader.batch_size
+    batch_size: int = train_loader.batch_size
+    global_step: int = start_epochs * len(train_loader) // batch_size
     for epoch in range(
         start_epochs, config['model'][model_type]['epochs'] + 1
     ):
         for _, lr_img in train_loader:
-            noisy_img = get_noisy(
-                lr_img[: train_loader.batch_size // 4, :, :, :], sigma
-            )
+            noisy_img = get_noisy(lr_img[: batch_size // 4, :, :, :], sigma)
             blurry_img = get_blurry(
-                lr_img[
-                    train_loader.batch_size
-                    // 4 : train_loader.batch_size
-                    // 2,
-                    :,
-                    :,
-                    :,
-                ],
-                4,
-                alpha,
+                lr_img[batch_size // 4 : batch_size // 2, :, :, :], 4, alpha,
             )
-            clean_img = lr_img[train_loader.batch_size // 2 :, :, :, :]
+            clean_img = lr_img[batch_size // 2 :, :, :, :]
 
             train_img = torch.cat([noisy_img, blurry_img, clean_img], dim=0)
             train_label = torch.cat(
                 [
-                    torch.zeros((train_loader.batch_size // 2, 1, 1, 1)),
-                    torch.ones((train_loader.batch_size // 2, 1, 1, 1)),
+                    torch.zeros((batch_size // 2, 1, 1, 1)),
+                    torch.ones((batch_size // 2, 1, 1, 1)),
                 ]
             ).to(device)
 
