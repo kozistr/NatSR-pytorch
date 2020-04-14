@@ -4,6 +4,7 @@ import torch
 from natsr import ModelType
 from natsr.dataloader import build_loader
 from natsr.losses import (
+    build_classification_loss,
     build_reconstruction_loss,
     discriminator_loss,
     generator_loss,
@@ -33,13 +34,47 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
     nmd_optimizer = build_optimizers(config, model_type, nmd_network)
 
+    cls_loss = build_classification_loss(
+        config['model']['cls_loss_type'], device
+    )
+
     nmd_network.train()
 
+    global_step: int = start_epochs * len(
+        train_loader
+    ) // train_loader.batch_size
     for epoch in range(
         start_epochs, config['model'][model_type]['epochs'] + 1
     ):
         for img in train_loader:
-            noisy_img = inject_dct_8x8(img, sigma=sigma)
+            noisy_img = inject_dct_8x8(
+                img[: train_loader.batch_size // 4, :, :, :], sigma=sigma
+            )
+            interp_img = img[
+                train_loader.batch_size // 4 : train_loader.batch_size // 2,
+                :,
+                :,
+                :,
+            ]
+            clean_img = img[train_loader.batch_size // 2 :, :, :, :]
+
+            train_img = torch.cat([noisy_img, interp_img, clean_img], dim=0)
+
+            nmd_optimizer.zero_grad()
+
+            out = nmd_network(train_img.to(device))
+
+            loss = cls_loss(out, 0)
+            loss.backward()
+            nmd_optimizer.step()
+
+            if (
+                global_step
+                and global_step % config['log']['logging_step'] == 0
+            ):
+                pass
+
+            global_step += 1
 
 
 def frsr_trainer(config, model_type: str, device: str, summary):
