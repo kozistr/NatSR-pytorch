@@ -24,7 +24,7 @@ from natsr.utils import (
 
 
 def nmd_trainer(config, model_type: str, device: str, summary):
-    train_loader, valid_loader = build_loader(config)
+    train_loader, valid_loader = build_loader(config, override_batch_size=100)
 
     nmd_network = build_model(config, model_type, device)
     start_epochs, _, alpha, sigma = load_models(

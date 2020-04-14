@@ -2,7 +2,7 @@ import os
 import random
 from glob import glob
 from math import sqrt
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -101,7 +101,9 @@ class DIV2KDataSet(Dataset):
         return len(self.hr_image_paths)
 
 
-def build_data_loader(config, data_type: str) -> DataLoader:
+def build_data_loader(
+    config, data_type: str, override_batch_size: Optional[int] = None
+) -> DataLoader:
     dataset_type: str = config['data']['dataset_type']
     model_type: str = config['model']['model_type']
 
@@ -119,7 +121,9 @@ def build_data_loader(config, data_type: str) -> DataLoader:
 
     data_loader = DataLoader(
         dataset=dataset,
-        batch_size=config['model'][model_type]['batch_size'],
+        batch_size=config['model'][model_type]['batch_size']
+        if override_batch_size is None
+        else override_batch_size,
         shuffle=True,
         pin_memory=is_gpu_available(),
         drop_last=False,
@@ -129,11 +133,15 @@ def build_data_loader(config, data_type: str) -> DataLoader:
     return data_loader
 
 
-def build_loader(config) -> Tuple[DataLoader, DataLoader]:
+def build_loader(
+    config, override_batch_size: Optional[int] = None
+) -> Tuple[DataLoader, DataLoader]:
     train_data_loader = build_data_loader(
         config, data_type=DataType.TRAIN.value
     )
     valid_data_loader = build_data_loader(
-        config, data_type=DataType.VALID.value
+        config,
+        data_type=DataType.VALID.value,
+        override_batch_size=override_batch_size,
     )
     return train_data_loader, valid_data_loader
