@@ -80,3 +80,7 @@ def ssim(img1, img2, window_size: int = 11, size_average: bool = True):
     window = window.type_as(img1)
 
     return _ssim(img1, img2, window, window_size, channel, size_average)
+
+
+def psnr(img1, img2):
+    return 10.0 * torch.log10(1.0 / F.mse_loss(img1, img2))
