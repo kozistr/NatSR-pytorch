@@ -70,8 +70,41 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                 with torch.no_grad():
                     for _, val_lr_img in valid_loader:
                         valid_img = get_nmd_data(val_lr_img, alpha, sigma)
+                        valid_label = torch.cat(
+                            [
+                                torch.zeros(
+                                    (val_lr_img.size(0) // 2, 1, 1, 1)
+                                ),
+                                torch.ones((val_lr_img.size(0) // 2, 1, 1, 1)),
+                            ]
+                        ).to(device)
+
+                        logs = {
+                            'loss/cls_loss': loss.item(),
+                            'metric/noisy_acc': 0,
+                            'metric/blurry_acc': 0,
+                            'aux/alpha': alpha,
+                            'aux/sigma': sigma,
+                        }
+                        log_summary(summary, logs, global_step)
 
                 nmd_network.train()
+
+            if alpha >= 0.8 and sigma <= 0.0044:
+                print(
+                    f'[+] training NMD is done! '
+                    f'alpha : {alpha} sigma : {sigma}'
+                )
+
+                save_model(
+                    config['log']['checkpoint']['nmd_model_path'],
+                    nmd_network,
+                    epoch,
+                    0.0,
+                    alpha,
+                    sigma,
+                )
+                break
 
             global_step += 1
 
