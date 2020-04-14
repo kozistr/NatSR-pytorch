@@ -36,13 +36,35 @@ $ git clone https://github.com/kozistr/NatSR-pytorch
 $ cd ./NatSR-pytorch
 ```
 
-1. **Change** the parameter what you want [`config.yaml`](./config.yaml)
+1. **Configure** your own environment.
+
+1.1. Using `pipenv` by given *Pipfile*
+
+```shell script
+$ pip3 install -U pipenv
+$ pipenv install --dev
+```
+
+1.2. Using `requirements.txt`
+
+```shell script
+$ pip3 install -r requirements.txt
+```
+
+2. **Change** the parameter what you want [`config.yaml`](./config.yaml)
+
+2.1. Mode
 
 * At train : `mode: train`
 * At test : `mode: test`
 * At inference : `mode: inference`
 
-2. Run!
+2.2. Model Type
+
+* training *NMD* : `model_type: 'nmd'`
+* training *FRSR* : `model_type: 'frsr'`
+
+3. Run!
 
 ```shell script
 $ python3 -m natsr
