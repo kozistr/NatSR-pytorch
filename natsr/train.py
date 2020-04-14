@@ -23,7 +23,7 @@ from natsr.utils import (
 
 
 def nmd_trainer(config, model_type: str, device: str, summary):
-    train_loader, valid_loader = build_loader(config)
+    train_loader, valid_loader = build_loader(config, skip_label=True)
 
     nmd_network = build_model(config, model_type, device)
     start_epochs, _ = load_models(
@@ -42,7 +42,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
 
 def frsr_trainer(config, model_type: str, device: str, summary):
-    train_loader, valid_loader = build_loader(config)
+    train_loader, valid_loader = build_loader(config, skip_label=False)
 
     gen_network, disc_network, nmd_network = build_model(
         config, model_type, device

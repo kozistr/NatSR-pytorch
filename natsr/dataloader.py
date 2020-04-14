@@ -43,8 +43,9 @@ def lr_transform(crop_size: int, scale: int):
 
 
 class DIV2KDataSet(Dataset):
-    def __init__(self, config, data_type: str):
+    def __init__(self, config, data_type: str, skip_label: bool):
         self.config = config
+        self.skip_label = skip_label
 
         self.scale_factor: int = get_scale_factor(
             config['data'][DataSets.DIV2K]['scale']
@@ -77,10 +78,10 @@ class DIV2KDataSet(Dataset):
                 f'[-] there\'s no dataset at {dataset_path}'
             )
 
-    def __getitem__(self, index: int, skip_label: bool = False):
+    def __getitem__(self, index: int):
         hr_image = self.hr_transform(Image.open(self.hr_image_paths[index]))
 
-        if skip_label:
+        if self.skip_label:
             return hr_image
 
         lr_image = self.lr_transform(hr_image)
@@ -91,7 +92,7 @@ class DIV2KDataSet(Dataset):
         return len(self.hr_image_paths)
 
 
-def build_data_loader(config, data_type: str) -> DataLoader:
+def build_data_loader(config, data_type: str, skip_label: bool) -> DataLoader:
     dataset_type: str = config['data']['dataset_type']
     model_type: str = config['model']['model_type']
 
@@ -101,7 +102,7 @@ def build_data_loader(config, data_type: str) -> DataLoader:
         )
 
     if dataset_type == DataSets.DIV2K:
-        dataset = DIV2KDataSet(config, data_type)
+        dataset = DIV2KDataSet(config, data_type, skip_label)
     else:
         raise NotImplementedError(
             f'[-] not supported dataset_type : {dataset_type}'
@@ -119,11 +120,13 @@ def build_data_loader(config, data_type: str) -> DataLoader:
     return data_loader
 
 
-def build_loader(config) -> Tuple[DataLoader, DataLoader]:
+def build_loader(
+    config, skip_label: bool = False
+) -> Tuple[DataLoader, DataLoader]:
     train_data_loader = build_data_loader(
-        config, data_type=DataType.TRAIN.value
+        config, data_type=DataType.TRAIN.value, skip_label=skip_label
     )
     valid_data_loader = build_data_loader(
-        config, data_type=DataType.VALID.value
+        config, data_type=DataType.VALID.value, skip_label=skip_label
     )
     return train_data_loader, valid_data_loader
