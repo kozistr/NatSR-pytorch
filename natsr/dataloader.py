@@ -1,4 +1,5 @@
 import os
+import random
 from glob import glob
 from math import sqrt
 from typing import List, Tuple
@@ -13,6 +14,7 @@ from torchvision.transforms import (
     ToPILImage,
     ToTensor,
 )
+from torchvision.transforms.functional import rotate
 
 from natsr import DataSets, DataType, ModelType
 from natsr.utils import is_gpu_available, is_valid_key
@@ -43,9 +45,8 @@ def lr_transform(crop_size: int, scale: int):
 
 
 class DIV2KDataSet(Dataset):
-    def __init__(self, config, data_type: str, skip_label: bool):
+    def __init__(self, config, data_type: str):
         self.config = config
-        self.skip_label = skip_label
 
         self.scale_factor: int = get_scale_factor(
             config['data'][DataSets.DIV2K]['scale']
@@ -80,19 +81,15 @@ class DIV2KDataSet(Dataset):
 
     def __getitem__(self, index: int):
         hr_image = self.hr_transform(Image.open(self.hr_image_paths[index]))
-
-        if self.skip_label:
-            return hr_image
-
+        hr_image = rotate(hr_image, random.choice([0, 90, 180, 270]))
         lr_image = self.lr_transform(hr_image)
-
         return lr_image, hr_image
 
     def __len__(self):
         return len(self.hr_image_paths)
 
 
-def build_data_loader(config, data_type: str, skip_label: bool) -> DataLoader:
+def build_data_loader(config, data_type: str) -> DataLoader:
     dataset_type: str = config['data']['dataset_type']
     model_type: str = config['model']['model_type']
 
@@ -102,7 +99,7 @@ def build_data_loader(config, data_type: str, skip_label: bool) -> DataLoader:
         )
 
     if dataset_type == DataSets.DIV2K:
-        dataset = DIV2KDataSet(config, data_type, skip_label)
+        dataset = DIV2KDataSet(config, data_type)
     else:
         raise NotImplementedError(
             f'[-] not supported dataset_type : {dataset_type}'
@@ -120,13 +117,11 @@ def build_data_loader(config, data_type: str, skip_label: bool) -> DataLoader:
     return data_loader
 
 
-def build_loader(
-    config, skip_label: bool = False
-) -> Tuple[DataLoader, DataLoader]:
+def build_loader(config) -> Tuple[DataLoader, DataLoader]:
     train_data_loader = build_data_loader(
-        config, data_type=DataType.TRAIN.value, skip_label=skip_label
+        config, data_type=DataType.TRAIN.value
     )
     valid_data_loader = build_data_loader(
-        config, data_type=DataType.VALID.value, skip_label=skip_label
+        config, data_type=DataType.VALID.value
     )
     return train_data_loader, valid_data_loader
