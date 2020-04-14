@@ -134,4 +134,7 @@ def msssim(
 
 
 def psnr(img1, img2):
-    return 10.0 * torch.log10(1.0 / F.mse_loss(img1, img2))
+    mse = F.mse_loss(img1, img2)
+    if mse == 0:
+        return 100.0
+    return 20.0 * torch.log10(1.0 / mse)
