@@ -37,6 +37,7 @@ def _ssim(
     window_size: int,
     channel: int,
     size_average: bool = True,
+    full: bool = False,
 ):
     mu1 = F.conv2d(img1, window, padding=window_size // 2, groups=channel)
     mu2 = F.conv2d(img2, window, padding=window_size // 2, groups=channel)
@@ -66,20 +67,70 @@ def _ssim(
     )
 
     if size_average:
-        return ssim_map.mean()
+        ssim_map = ssim_map.mean()
     else:
-        return ssim_map.mean(1).mean(1).mean(1)
+        ssim_map = ssim_map.mean(1).mean(1).mean(1)
+
+    if not full:
+        return ssim_map
+
+    _v1 = 2.0 * sigma12 + c2
+    _v2 = sigma1_sq + sigma2_sq + c2
+    cs = torch.mean(_v1 / _v2)
+
+    return ssim_map, cs
 
 
-def ssim(img1, img2, window_size: int = 11, size_average: bool = True):
-    (_, channel, _, _) = img1.size()
-    window = create_window(window_size, channel)
+def ssim(
+    img1,
+    img2,
+    window_size: int = 11,
+    size_average: bool = True,
+    full: bool = False,
+):
+    (_, channel, height, width) = img1.size()
+
+    _window_size = min(window_size, height, width)
+    window = create_window(_window_size, channel)
 
     if img1.is_cuda:
         window = window.cuda(img1.get_device())
     window = window.type_as(img1)
 
-    return _ssim(img1, img2, window, window_size, channel, size_average)
+    return _ssim(img1, img2, window, window_size, channel, size_average, full)
+
+
+def msssim(
+    img1,
+    img2,
+    window_size: int = 11,
+    size_average: bool = True,
+    full: bool = True,
+):
+    weights = torch.Tensor([0.0448, 0.2856, 0.3001, 0.2363, 0.1333])
+    if img1.is_cuda:
+        weights = weights.cuda(img1.get_device())
+    weights = weights.type_as(img1)
+
+    levels = weights.size(0)
+
+    ms_ssim, mcs = [], []
+    for _ in range(levels):
+        sim, cs = ssim(img1, img2, window_size, size_average, full=full)
+
+        ms_ssim.append(sim)
+        mcs.append(cs)
+
+        img1 = F.avg_pool2d(img1, (2, 2))
+        img2 = F.avg_pool2d(img2, (2, 2))
+
+    ms_ssim = torch.stack(ms_ssim)
+    mcs = torch.stack(mcs)
+
+    pow1 = mcs ** weights
+    pow2 = ms_ssim ** weights
+    mssim = torch.prod(pow1[:-1] * pow2[-1])
+    return mssim
 
 
 def psnr(img1, img2):
