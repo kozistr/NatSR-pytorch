@@ -5,6 +5,7 @@ from math import sqrt
 from typing import List, Tuple
 
 import numpy as np
+import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import (
@@ -17,7 +18,7 @@ from torchvision.transforms import (
 from torchvision.transforms.functional import rotate
 
 from natsr import DataSets, DataType, ModelType
-from natsr.utils import is_gpu_available, is_valid_key
+from natsr.utils import get_blurry, get_noisy, is_gpu_available, is_valid_key
 
 
 def get_scale_factor(scale: int) -> int:
@@ -42,6 +43,17 @@ def lr_transform(crop_size: int, scale: int):
             ToTensor(),
         ]
     )
+
+
+def get_nmd_data(img, alpha: float, sigma: float):
+    batch_size: int = img.size(0)
+
+    noisy_img = get_noisy(img[: batch_size // 4, :, :, :], sigma)
+    blurry_img = get_blurry(
+        img[batch_size // 4 : batch_size // 2, :, :, :], 4, alpha,
+    )
+    clean_img = img[batch_size // 2 :, :, :, :]
+    return torch.cat([noisy_img, blurry_img, clean_img], dim=0)
 
 
 class DIV2KDataSet(Dataset):

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from natsr import ModelType
-from natsr.dataloader import build_loader
+from natsr.dataloader import build_loader, get_nmd_data
 from natsr.losses import (
     build_classification_loss,
     build_reconstruction_loss,
@@ -16,8 +16,6 @@ from natsr.optimizers import build_optimizers
 from natsr.schedulers import build_lr_scheduler
 from natsr.utils import (
     build_summary_writer,
-    get_blurry,
-    get_noisy,
     load_models,
     log_summary,
     save_model,
@@ -41,23 +39,18 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
     nmd_network.train()
 
-    batch_size: int = train_loader.batch_size
-    global_step: int = start_epochs * len(train_loader) // batch_size
+    global_step: int = start_epochs * len(
+        train_loader
+    ) // train_loader.batch_size
     for epoch in range(
         start_epochs, config['model'][model_type]['epochs'] + 1
     ):
         for _, lr_img in train_loader:
-            noisy_img = get_noisy(lr_img[: batch_size // 4, :, :, :], sigma)
-            blurry_img = get_blurry(
-                lr_img[batch_size // 4 : batch_size // 2, :, :, :], 4, alpha,
-            )
-            clean_img = lr_img[batch_size // 2 :, :, :, :]
-
-            train_img = torch.cat([noisy_img, blurry_img, clean_img], dim=0)
+            train_img = get_nmd_data(lr_img, alpha, sigma)
             train_label = torch.cat(
                 [
-                    torch.zeros((batch_size // 2, 1, 1, 1)),
-                    torch.ones((batch_size // 2, 1, 1, 1)),
+                    torch.zeros((lr_img.size(0) // 2, 1, 1, 1)),
+                    torch.ones((lr_img.size(0) // 2, 1, 1, 1)),
                 ]
             ).to(device)
 
@@ -72,7 +65,13 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                 global_step
                 and global_step % config['log']['logging_step'] == 0
             ):
-                pass
+                nmd_network.eval()
+
+                with torch.no_grad():
+                    for _, val_lr_img in valid_loader:
+                        valid_img = get_nmd_data(val_lr_img, alpha, sigma)
+
+                nmd_network.train()
 
             global_step += 1
 
