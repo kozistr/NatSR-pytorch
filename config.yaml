@@ -14,12 +14,12 @@ data:
   bsd100:
     dataset_path: './BSD100/'
 model:
-  model_type: 'natsr'
+  model_type: 'frsr'
   use_ra: 1
   adv_loss_type: 'gan'
   rec_loss_type: 'l1'
   cls_loss_type: 'bce'
-  natsr:
+  frsr:
     height: 192
     width: 192
     channel: 3

@@ -50,7 +50,7 @@ class DIV2KDataSet(Dataset):
             config['data'][DataSets.DIV2K]['scale']
         )
         self.crop_size: int = get_valid_crop_size(
-            config['model'][ModelType.NATSR]['height'], self.scale_factor
+            config['model'][ModelType.FRSR]['height'], self.scale_factor
         )
 
         self.hr_image_paths: List[str] = []

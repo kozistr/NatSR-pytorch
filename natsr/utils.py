@@ -74,7 +74,7 @@ def load_models(
         config['log']['checkpoint']['nmd_model_path'], nmd_network, device
     )
 
-    if config['model']['model_type'] == ModelType.NATSR:
+    if config['model']['model_type'] == ModelType.FRSR:
         start_epochs, ssim = load_model(
             config['log']['checkpoint']['gen_model_path'], gen_network, device
         )

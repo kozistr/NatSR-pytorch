@@ -41,7 +41,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
             pass
 
 
-def natsr_trainer(config, model_type: str, device: str, summary):
+def frsr_trainer(config, model_type: str, device: str, summary):
     train_loader, valid_loader = build_loader(config)
 
     gen_network, disc_network, nmd_network = build_model(
@@ -92,11 +92,11 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             rec_loss = recon_loss(sr, hr.to(device))
 
             loss = (
-                config['model'][ModelType.NATSR]['loss']['recon_weight']
+                config['model'][ModelType.FRSR]['loss']['recon_weight']
                 * rec_loss
-                + config['model'][ModelType.NATSR]['loss']['natural_weight']
+                + config['model'][ModelType.FRSR]['loss']['natural_weight']
                 * nat_loss
-                + config['model'][ModelType.NATSR]['loss']['generate_weight']
+                + config['model'][ModelType.FRSR]['loss']['generate_weight']
                 * g_loss
             )
             loss.backward(retain_graph=True)
@@ -130,7 +130,9 @@ def natsr_trainer(config, model_type: str, device: str, summary):
                                 ),
                             )
                             for val_lr, val_hr in valid_loader
-                            for _sr, _hr in zip(gen_network(val_lr.to(device)), val_hr)
+                            for _sr, _hr in zip(
+                                gen_network(val_lr.to(device)), val_hr
+                            )
                         ],
                         dtype=np.float32,
                     )
@@ -180,7 +182,7 @@ def natsr_trainer(config, model_type: str, device: str, summary):
             if (
                 global_step
                 and global_step
-                % config['model'][ModelType.NATSR]['lr_decay_steps']
+                % config['model'][ModelType.FRSR]['lr_decay_steps']
                 == 0
             ):
                 gen_lr_scheduler.step()
@@ -195,8 +197,8 @@ def train(config):
 
     summary = build_summary_writer(config)
 
-    if model_type == ModelType.NATSR:
-        natsr_trainer(config, model_type, device, summary)
+    if model_type == ModelType.FRSR:
+        frsr_trainer(config, model_type, device, summary)
     if model_type == ModelType.NMD:
         nmd_trainer(config, model_type, device, summary)
     raise NotImplementedError(f'[-] not supported modeL_type : {model_type}')

@@ -12,7 +12,7 @@ class Mode(str, Enum):
 
 @unique
 class ModelType(str, Enum):
-    NATSR = 'natsr'
+    FRSR = 'frsr'
     NMD = 'nmd'
 
 

@@ -62,11 +62,11 @@ class Generator(nn.Module):
         self.config = config['model']
 
         self.scale = scale
-        self.channel = self.config[ModelType.NATSR]['channel']
-        self.n_feats = self.config[ModelType.NATSR]['n_feats']
-        self.n_rep_rd_blocks = self.config[ModelType.NATSR]['n_rep_rd_blocks']
-        self.n_rd_blocks = self.config[ModelType.NATSR]['n_rd_blocks']
-        self.nb_layers = self.config[ModelType.NATSR]['nb_layers']
+        self.channel = self.config[ModelType.FRSR]['channel']
+        self.n_feats = self.config[ModelType.FRSR]['n_feats']
+        self.n_rep_rd_blocks = self.config[ModelType.FRSR]['n_rep_rd_blocks']
+        self.n_rd_blocks = self.config[ModelType.FRSR]['n_rd_blocks']
+        self.nb_layers = self.config[ModelType.FRSR]['nb_layers']
 
         self.head_conv = nn.Conv2d(
             self.channel, self.n_feats, kernel_size=3, padding=1
@@ -158,8 +158,8 @@ class Discriminator(nn.Module):
         super().__init__()
         self.config = config['model']
 
-        self.channel = self.config[ModelType.NATSR]['channel']
-        self.n_feats = self.config[ModelType.NATSR]['n_feats']
+        self.channel = self.config[ModelType.FRSR]['channel']
+        self.n_feats = self.config[ModelType.FRSR]['n_feats']
 
         self.conv1_1 = spectral_norm(
             nn.Conv2d(
@@ -371,7 +371,7 @@ class NMD(nn.Module):
 
 
 def build_model(config, model_type: str, device: str):
-    if model_type == ModelType.NATSR:
+    if model_type == ModelType.FRSR:
         gen_network = Generator(config).to(device)
         disc_network = Discriminator(config).to(device)
         nmd_network = NMD(config).to(device)
