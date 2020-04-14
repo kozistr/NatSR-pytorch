@@ -161,18 +161,14 @@ def inject_dct_8x8(x, sigma: float):
     return inv_x
 
 
-def get_interpolation(img1, img2, alpha: float):
-    return alpha * img1 + (1.0 - alpha) * img2
-
-
 def get_noisy(img, sigma: float):
     dct_img = inject_dct_8x8(tensor_to_numpy(img), sigma)
     dct_img = torch.from_numpy(dct_img).float().to(img.device)
     return dct_img
 
 
-def get_blurry(img, scale: int, alpha: float):
-    _img = F.interpolate(img, scale_factor=1.0 / scale, mode='bicubic')
-    _img = F.interpolate(_img, scale_factor=scale, mode='bicubic')
-    x_blurry = (1.0 - alpha) * _img + alpha * img
+def get_blurry(lr_img, scale: int, alpha: float):
+    _hr_img = F.interpolate(lr_img, scale_factor=1.0 / scale, mode='bicubic')
+    _lr_img = F.interpolate(_hr_img, scale_factor=scale, mode='bicubic')
+    x_blurry = (1.0 - alpha) * _lr_img + alpha * lr_img
     return x_blurry

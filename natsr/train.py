@@ -16,7 +16,8 @@ from natsr.optimizers import build_optimizers
 from natsr.schedulers import build_lr_scheduler
 from natsr.utils import (
     build_summary_writer,
-    inject_dct_8x8,
+    get_blurry,
+    get_noisy,
     load_models,
     log_summary,
     save_model,
@@ -25,7 +26,7 @@ from natsr.utils import (
 
 
 def nmd_trainer(config, model_type: str, device: str, summary):
-    train_loader, valid_loader = build_loader(config, skip_label=True)
+    train_loader, valid_loader = build_loader(config)
 
     nmd_network = build_model(config, model_type, device)
     start_epochs, _, alpha, sigma = load_models(
@@ -46,25 +47,36 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     for epoch in range(
         start_epochs, config['model'][model_type]['epochs'] + 1
     ):
-        for img in train_loader:
-            noisy_img = inject_dct_8x8(
-                img[: train_loader.batch_size // 4, :, :, :], sigma=sigma
+        for _, lr_img in train_loader:
+            noisy_img = get_noisy(
+                lr_img[: train_loader.batch_size // 4, :, :, :], sigma
             )
-            interp_img = img[
-                train_loader.batch_size // 4 : train_loader.batch_size // 2,
-                :,
-                :,
-                :,
-            ]
-            clean_img = img[train_loader.batch_size // 2 :, :, :, :]
+            blurry_img = get_blurry(
+                lr_img[
+                    train_loader.batch_size
+                    // 4 : train_loader.batch_size
+                    // 2,
+                    :,
+                    :,
+                    :,
+                ],
+                4,
+                alpha,
+            )
+            clean_img = lr_img[train_loader.batch_size // 2 :, :, :, :]
 
-            train_img = torch.cat([noisy_img, interp_img, clean_img], dim=0)
-
-            nmd_optimizer.zero_grad()
+            train_img = torch.cat([noisy_img, blurry_img, clean_img], dim=0)
+            train_label = torch.cat(
+                [
+                    torch.zeros((train_loader.batch_size // 2, 1, 1, 1)),
+                    torch.ones((train_loader.batch_size // 2, 1, 1, 1)),
+                ]
+            ).to(device)
 
             out = nmd_network(train_img.to(device))
 
-            loss = cls_loss(out, 0)
+            nmd_optimizer.zero_grad()
+            loss = cls_loss(out, train_label)
             loss.backward()
             nmd_optimizer.step()
 
@@ -78,7 +90,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
 
 def frsr_trainer(config, model_type: str, device: str, summary):
-    train_loader, valid_loader = build_loader(config, skip_label=False)
+    train_loader, valid_loader = build_loader(config)
 
     gen_network, disc_network, nmd_network = build_model(
         config, model_type, device
