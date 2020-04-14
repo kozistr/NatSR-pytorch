@@ -15,6 +15,7 @@ from natsr.optimizers import build_optimizers
 from natsr.schedulers import build_lr_scheduler
 from natsr.utils import (
     build_summary_writer,
+    inject_dct_8x8,
     load_models,
     log_summary,
     save_model,
@@ -26,7 +27,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     train_loader, valid_loader = build_loader(config, skip_label=True)
 
     nmd_network = build_model(config, model_type, device)
-    start_epochs, _ = load_models(
+    start_epochs, _, alpha, sigma = load_models(
         config['checkpoint']['nmd_model_path'], device, None, None, nmd_network
     )
 
@@ -37,8 +38,8 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     for epoch in range(
         start_epochs, config['model'][model_type]['epochs'] + 1
     ):
-        for lr, hr in train_loader:
-            pass
+        for img in train_loader:
+            noisy_img = inject_dct_8x8(img, sigma=sigma)
 
 
 def frsr_trainer(config, model_type: str, device: str, summary):
@@ -47,7 +48,7 @@ def frsr_trainer(config, model_type: str, device: str, summary):
     gen_network, disc_network, nmd_network = build_model(
         config, model_type, device
     )
-    start_epochs, start_ssim = load_models(
+    start_epochs, start_ssim, _, _ = load_models(
         config, device, gen_network, disc_network, nmd_network
     )
     end_epochs: int = config['model'][model_type]['epochs'] + 1

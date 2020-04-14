@@ -47,6 +47,8 @@ def is_gpu_available() -> bool:
 def load_model(filepath: str, model: nn.Module, device: str):
     epoch: int = 1
     ssim: float = 0.0
+    alpha: float = 0.5
+    sigma: float = 0.1
 
     if os.path.exists(filepath):
         checkpoint = torch.load(filepath, map_location=device)
@@ -58,11 +60,17 @@ def load_model(filepath: str, model: nn.Module, device: str):
         except KeyError:
             model.load_state_dict(checkpoint)
 
+        try:
+            alpha = checkpoint['alpha']
+            sigma = checkpoint['sigma']
+        except KeyError:
+            pass
+
         print(f'[+] model {str(model)} ({filepath}) loaded! epoch : {epoch}')
     else:
         print(f'[-] model {str(model)} ({filepath}) is not loaded :(')
 
-    return epoch, ssim
+    return epoch, ssim, sigma, alpha
 
 
 def load_models(
@@ -71,26 +79,31 @@ def load_models(
     gen_network: Optional[nn.Module],
     disc_network: Optional[nn.Module],
     nmd_network: Optional[nn.Module],
-) -> Tuple[int, float]:
-    start_epochs, ssim = load_model(
+) -> Tuple[int, float, float, float]:
+    start_epochs, ssim, alpha, sigma = load_model(
         config['log']['checkpoint']['nmd_model_path'], nmd_network, device
     )
 
     if config['model']['model_type'] == ModelType.FRSR:
-        start_epochs, ssim = load_model(
+        start_epochs, ssim, _, _ = load_model(
             config['log']['checkpoint']['gen_model_path'], gen_network, device
         )
-        _, _ = load_model(
+        load_model(
             config['log']['checkpoint']['disc_model_path'],
             disc_network,
             device,
         )
 
-    return start_epochs, ssim
+    return start_epochs, ssim, sigma, alpha
 
 
 def save_model(
-    filepath: str, model: nn.Module, epoch: int, ssim: Optional[float]
+    filepath: str,
+    model: nn.Module,
+    epoch: int,
+    ssim: Optional[float],
+    alpha: Optional[float],
+    sigma: Optional[float],
 ):
     model_info = {
         'model': model.state_dict(),
@@ -98,6 +111,10 @@ def save_model(
     }
     if ssim:
         model_info.update({'ssim': ssim})
+    if alpha:
+        model_info.update({'alpha': alpha})
+    if sigma:
+        model_info.update({'sigma': sigma})
 
     torch.save(model_info, filepath)
 
