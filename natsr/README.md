@@ -1,5 +1,10 @@
 # NatSR
 
+## Difference
+
+1. Original repo (they) saves `already augmented (rot 90, 180, 270 degrees)` images. But, i just `run-time augmentation` w/ same methods.
+2. They calculate `tv loss(?)`, then, save images selectively. But my implementation doesn't consider it.
+
 ## Proposed Architecture
 
 ### Explicitly Modeling the SISR & Designing Natural Manifold
