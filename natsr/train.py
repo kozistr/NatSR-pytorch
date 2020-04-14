@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from natsr import ModelType
+from natsr import Mode, ModelType
 from natsr.dataloader import build_loader, get_nmd_data
 from natsr.losses import (
     build_classification_loss,
@@ -39,6 +39,8 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
     nmd_network.train()
 
+    # TODO: parameterize the scale from config
+    scale: int = 4
     global_step: int = start_epochs * len(
         train_loader
     ) // train_loader.batch_size
@@ -46,7 +48,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
         start_epochs, config['model'][model_type]['epochs'] + 1
     ):
         for _, lr_img in train_loader:
-            train_img = get_nmd_data(lr_img, alpha, sigma)
+            train_img = get_nmd_data(lr_img, scale, alpha, sigma, Mode.TRAIN)
             train_label = torch.cat(
                 [
                     torch.zeros((lr_img.size(0) // 2, 1, 1, 1)),
@@ -69,7 +71,9 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
                 with torch.no_grad():
                     for _, val_lr_img in valid_loader:
-                        valid_img = get_nmd_data(val_lr_img, alpha, sigma)
+                        valid_img = get_nmd_data(
+                            val_lr_img, scale, alpha, sigma, Mode.VALID
+                        )
                         valid_label = torch.cat(
                             [
                                 torch.zeros(
@@ -78,6 +82,8 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                                 torch.ones((val_lr_img.size(0) // 2, 1, 1, 1)),
                             ]
                         ).to(device)
+
+                        loss = nmd_network(valid_img)
 
                         logs = {
                             'loss/cls_loss': loss.item(),

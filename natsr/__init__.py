@@ -6,6 +6,7 @@ CONFIG_FILENAME: str = 'config.yaml'
 @unique
 class Mode(str, Enum):
     TRAIN = 'train'
+    VALID = 'valid'
     TEST = 'test'
     INFERENCE = 'inference'
 

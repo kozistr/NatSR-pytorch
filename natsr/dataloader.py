@@ -17,7 +17,7 @@ from torchvision.transforms import (
 )
 from torchvision.transforms.functional import rotate
 
-from natsr import DataSets, DataType, ModelType
+from natsr import DataSets, DataType, Mode, ModelType
 from natsr.utils import get_blurry, get_noisy, is_gpu_available, is_valid_key
 
 
@@ -45,14 +45,19 @@ def lr_transform(crop_size: int, scale: int):
     )
 
 
-def get_nmd_data(img, alpha: float, sigma: float):
+def get_nmd_data(img, scale: int, alpha: float, sigma: float, mode: str):
     batch_size: int = img.size(0)
 
-    noisy_img = get_noisy(img[: batch_size // 4, :, :, :], sigma)
-    blurry_img = get_blurry(
-        img[batch_size // 4 : batch_size // 2, :, :, :], 4, alpha,
-    )
-    clean_img = img[batch_size // 2 :, :, :, :]
+    if mode == Mode.TRAIN:
+        noisy_img = get_noisy(img[: batch_size // 4, :, :, :], sigma)
+        blurry_img = get_blurry(
+            img[batch_size // 4 : batch_size // 2, :, :, :], scale, alpha,
+        )
+        clean_img = img[batch_size // 2 :, :, :, :]
+    else:
+        noisy_img = get_noisy(img, sigma)
+        blurry_img = get_blurry(img, 4, alpha)
+        clean_img = img
     return torch.cat([noisy_img, blurry_img, clean_img], dim=0)
 
 
