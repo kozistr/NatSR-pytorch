@@ -77,9 +77,14 @@ class DIV2KDataSet(Dataset):
                 f'[-] there\'s no dataset at {dataset_path}'
             )
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int, skip_label: bool = False):
         hr_image = self.hr_transform(Image.open(self.hr_image_paths[index]))
+
+        if skip_label:
+            return hr_image
+
         lr_image = self.lr_transform(hr_image)
+
         return lr_image, hr_image
 
     def __len__(self):
