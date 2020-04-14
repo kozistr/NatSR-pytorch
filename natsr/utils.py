@@ -55,10 +55,14 @@ def load_model(filepath: str, model: nn.Module, device: str):
 
         try:
             model.load_state_dict(checkpoint['model'])
+        except KeyError:
+            raise KeyError('[-] there\'re no checkpoint')
+
+        try:
             epoch = checkpoint['epoch']
             ssim = checkpoint['ssim']
         except KeyError:
-            model.load_state_dict(checkpoint)
+            pass
 
         try:
             alpha = checkpoint['alpha']
