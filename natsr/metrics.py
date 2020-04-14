@@ -138,3 +138,8 @@ def psnr(img1, img2):
     if mse == 0:
         return 100.0
     return 20.0 * torch.log10(1.0 / mse)
+
+
+def acc(_pred, _true):
+    eq = torch.eq(torch.gt(_pred, 0.5).float(), _true)
+    return 100.0 * torch.mean(eq.float())
