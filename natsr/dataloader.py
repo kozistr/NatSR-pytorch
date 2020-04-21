@@ -97,8 +97,9 @@ class DIV2KDataSet(Dataset):
             )
 
     def __getitem__(self, index: int):
-        hr_image = self.hr_transform(Image.open(self.hr_image_paths[index]))
+        hr_image = Image.open(self.hr_image_paths[index])
         hr_image = rotate(hr_image, random.choice([0, 90, 180, 270]))
+        hr_image = self.hr_transform(hr_image)
         lr_image = self.lr_transform(hr_image)
         return lr_image, hr_image
 
