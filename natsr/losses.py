@@ -129,7 +129,7 @@ def natural_loss(x: torch.Tensor, eps: float = 1e-10):
 
 def build_classification_loss(cls_loss_type: str, device: str):
     if cls_loss_type == ClsLossType.BCE:
-        return nn.BCELoss(reduction='mean').to(device)
+        return nn.BCEWithLogitsLoss(reduction='mean').to(device)
     if cls_loss_type == ClsLossType.CCE:
         return nn.CrossEntropyLoss(reduction='mean').to(device)
     raise NotImplementedError(
