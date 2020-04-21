@@ -7,10 +7,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import yaml
+from scipy.fftpack import dct, idct
 from tensorboardX import SummaryWriter
 
 from natsr import DeviceType, ModelType
-from scipy.fftpack import dct, idct
 
 
 def get_config(filename: str):

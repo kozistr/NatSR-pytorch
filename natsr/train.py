@@ -28,7 +28,11 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
     nmd_network = build_model(config, model_type, device)
     start_epochs, _, alpha, sigma = load_models(
-        config['checkpoint']['nmd_model_path'], device, None, None, nmd_network
+        config['log']['checkpoint']['nmd_model_path'],
+        device,
+        None,
+        None,
+        nmd_network,
     )
 
     nmd_optimizer = build_optimizers(config, model_type, nmd_network)
