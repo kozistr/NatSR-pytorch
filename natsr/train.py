@@ -51,8 +51,8 @@ def nmd_trainer(config, model_type: str, device: str, summary):
             train_img = get_nmd_data(lr_img, scale, alpha, sigma, Mode.TRAIN)
             train_label = torch.cat(
                 [
-                    torch.zeros((lr_img.size(0) // 2, 1, 1, 1)),
-                    torch.ones((lr_img.size(0) // 2, 1, 1, 1)),
+                    torch.zeros((lr_img.size(0) // 2, 1)),
+                    torch.ones((lr_img.size(0) // 2, 1)),
                 ]
             ).to(device)
 
