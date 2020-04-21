@@ -157,7 +157,7 @@ def inject_dct_8x8(x, sigma: float):
 
     inv_x = idct(x_dct_noise, axis=3, norm='ortho')
     inv_x = idct(inv_x, axis=5, norm='ortho')
-    inv_x = np.reshape(inv_x, x.shape)
+    inv_x = np.reshape(inv_x, (b, c, h, w))
     return inv_x
 
 
