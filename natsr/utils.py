@@ -168,7 +168,11 @@ def get_noisy(img, sigma: float):
 
 
 def get_blurry(lr_img, scale: int, alpha: float):
-    _hr_img = F.interpolate(lr_img, scale_factor=1.0 / scale, mode='bicubic')
-    _lr_img = F.interpolate(_hr_img, scale_factor=scale, mode='bicubic')
+    _hr_img = F.interpolate(
+        lr_img, scale_factor=1.0 / scale, mode='bicubic', align_corners=True
+    )
+    _lr_img = F.interpolate(
+        _hr_img, scale_factor=scale, mode='bicubic', align_corners=True
+    )
     x_blurry = (1.0 - alpha) * _lr_img + alpha * lr_img
     return x_blurry
