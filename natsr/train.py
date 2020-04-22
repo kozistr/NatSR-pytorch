@@ -83,7 +83,8 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                             ]
                         ).to(device)
 
-                        loss = nmd_network(valid_img.to(device))
+                        out = nmd_network(valid_img.to(device))
+                        loss = cls_loss(out, valid_label)
 
                         logs = {
                             'loss/cls_loss': torch.mean(loss),
