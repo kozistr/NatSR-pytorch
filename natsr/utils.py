@@ -130,7 +130,7 @@ def build_summary_writer(config):
 
 
 def log_summary(summary, data, global_step: int):
-    for k, v in data.item():
+    for k, v in data.items():
         if k.startswith('loss') or k.startswith('aux'):
             summary.add_scalar(k, v, global_step)
         else:
