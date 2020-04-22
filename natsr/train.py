@@ -86,7 +86,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                         loss = nmd_network(valid_img.to(device))
 
                         logs = {
-                            'loss/cls_loss': loss.item(),
+                            'loss/cls_loss': loss,
                             'metric/noisy_acc': 0,
                             'metric/blurry_acc': 0,
                             'aux/alpha': alpha,
