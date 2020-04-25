@@ -1,7 +1,15 @@
+from typing import List, Tuple
+
 import numpy as np
 import torch
 
-from natsr import THRESHOLD_ALPHA, THRESHOLD_SIGMA, Mode, ModelType
+from natsr import (
+    THRESHOLD_ACC,
+    THRESHOLD_ALPHA,
+    THRESHOLD_SIGMA,
+    Mode,
+    ModelType,
+)
 from natsr.dataloader import build_loader, get_nmd_data
 from natsr.losses import (
     build_classification_loss,
@@ -23,6 +31,19 @@ from natsr.utils import (
 )
 
 
+def update_alpha_sigma(
+    alpha: float,
+    sigma: float,
+    alpha_stacks: List[float],
+    sigma_stacks: List[float],
+) -> Tuple[float, float]:
+    if np.mean(alpha_stacks) >= THRESHOLD_ACC:
+        alpha = np.clip(alpha + 0.1, 0.5, 0.9)
+    if np.mean(sigma_stacks) >= THRESHOLD_ACC:
+        sigma = np.clip(sigma * 0.8, 0.0044, 0.1)
+    return alpha, sigma
+
+
 def nmd_trainer(config, model_type: str, device: str, summary):
     train_loader, valid_loader = build_loader(config, override_batch_size=100)
 
@@ -40,7 +61,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     nmd_network.train()
 
     # TODO: parameterize the scale from config
-    scale: int = config['']
+    scale: int = 4
     global_step: int = start_epochs * len(
         train_loader
     ) // train_loader.batch_size
@@ -90,6 +111,12 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                         alpha_acc = acc(alpha_out, valid_label)
                         sigma_acc = acc(sigma_out, valid_label)
 
+                        # TODO: impl fixed-size queue
+                        alpha_stacks.append(alpha_acc)
+                        alpha_stacks = alpha_stacks[1:]
+                        sigma_stacks.append(sigma_acc)
+                        sigma_stacks = sigma_stacks[1:]
+
                         logs = {
                             'metric/alpha_acc': torch.mean(alpha_acc),
                             'metric/sigma_acc': torch.mean(sigma_acc),
@@ -99,6 +126,10 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                         log_summary(summary, logs, global_step)
 
                 nmd_network.train()
+
+            alpha, sigma = update_alpha_sigma(
+                alpha, sigma, alpha_stacks, sigma_stacks
+            )
 
             if alpha >= THRESHOLD_ALPHA and sigma <= THRESHOLD_SIGMA:
                 print(
@@ -114,7 +145,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                     alpha,
                     sigma,
                     alpha_stacks,
-                    sigma_stacks
+                    sigma_stacks,
                 )
                 break
 

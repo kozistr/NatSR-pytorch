@@ -4,6 +4,7 @@ CONFIG_FILENAME: str = 'config.yaml'
 
 THRESHOLD_ALPHA: float = 0.8
 THRESHOLD_SIGMA: float = 0.0444
+THRESHOLD_ACC: float = 0.95
 
 
 @unique
