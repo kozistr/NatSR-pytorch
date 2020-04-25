@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -49,6 +49,8 @@ def load_model(filepath: str, model: nn.Module, device: str):
     ssim: float = 0.0
     alpha: float = 0.5
     sigma: float = 0.1
+    alpha_stacks: List[float] = [0.0] * 10
+    sigma_stacks: List[float] = [0.0] * 10
 
     if os.path.exists(filepath):
         checkpoint = torch.load(filepath, map_location=device)
@@ -67,6 +69,8 @@ def load_model(filepath: str, model: nn.Module, device: str):
         try:
             alpha = checkpoint['alpha']
             sigma = checkpoint['sigma']
+            alpha_stacks = checkpoint['alpha_stacks']
+            sigma_stacks = checkpoint['sigma_stacks']
         except KeyError:
             pass
 
@@ -74,7 +78,7 @@ def load_model(filepath: str, model: nn.Module, device: str):
     else:
         print(f'[-] model {str(model)} ({filepath}) is not loaded :(')
 
-    return epoch, ssim, sigma, alpha
+    return epoch, ssim, sigma, alpha, alpha_stacks, sigma_stacks
 
 
 def load_models(
@@ -83,13 +87,13 @@ def load_models(
     gen_network: Optional[nn.Module],
     disc_network: Optional[nn.Module],
     nmd_network: Optional[nn.Module],
-) -> Tuple[int, float, float, float]:
-    start_epochs, ssim, alpha, sigma = load_model(
+) -> Tuple[int, float, float, float, List[float], List[float]]:
+    start_epochs, ssim, alpha, sigma, alpha_stacks, sigma_stacks = load_model(
         config['log']['checkpoint']['nmd_model_path'], nmd_network, device
     )
 
     if config['model']['model_type'] == ModelType.FRSR:
-        start_epochs, ssim, _, _ = load_model(
+        start_epochs, ssim, _, _, _, _ = load_model(
             config['log']['checkpoint']['gen_model_path'], gen_network, device
         )
         load_model(
@@ -98,7 +102,7 @@ def load_models(
             device,
         )
 
-    return start_epochs, ssim, sigma, alpha
+    return start_epochs, ssim, alpha, sigma, alpha_stacks, sigma_stacks
 
 
 def save_model(
@@ -108,6 +112,8 @@ def save_model(
     ssim: Optional[float],
     alpha: Optional[float],
     sigma: Optional[float],
+    alpha_stacks: Optional[List[float]],
+    sigma_stacks: Optional[List[float]],
 ):
     model_info = {'model': model.state_dict(), 'epoch': epoch}
     if ssim:
@@ -116,6 +122,10 @@ def save_model(
         model_info.update({'alpha': alpha})
     if sigma:
         model_info.update({'sigma': sigma})
+    if alpha_stacks:
+        model_info.update({'alpha_stacks': alpha_stacks})
+    if sigma_stacks:
+        model_info.update({'sigma_stacks': sigma_stacks})
 
     torch.save(model_info, filepath)
 

@@ -10,7 +10,7 @@ from natsr.losses import (
     generator_loss,
     natural_loss,
 )
-from natsr.metrics import ssim
+from natsr.metrics import acc, ssim
 from natsr.model import build_model
 from natsr.optimizers import build_optimizers
 from natsr.schedulers import build_lr_scheduler
@@ -27,7 +27,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     train_loader, valid_loader = build_loader(config, override_batch_size=100)
 
     nmd_network = build_model(config, model_type, device)
-    start_epochs, _, alpha, sigma = load_models(
+    start_epochs, _, alpha, sigma, alpha_stacks, sigma_stacks = load_models(
         config, device, None, None, nmd_network
     )
 
@@ -40,7 +40,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     nmd_network.train()
 
     # TODO: parameterize the scale from config
-    scale: int = 4
+    scale: int = config['']
     global_step: int = start_epochs * len(
         train_loader
     ) // train_loader.batch_size
@@ -72,7 +72,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
                 with torch.no_grad():
                     for _, val_lr_img in valid_loader:
-                        valid_img = get_nmd_data(
+                        valid_alpha_img, valid_sigma_img = get_nmd_data(
                             val_lr_img, scale, alpha, sigma, Mode.VALID
                         )
                         valid_label = torch.cat(
@@ -84,14 +84,15 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                             ]
                         ).to(device)
 
-                        out = nmd_network(valid_img.to(device))
-                        loss = cls_loss(out, valid_label)
+                        alpha_out = nmd_network(valid_alpha_img.to(device))
+                        sigma_out = nmd_network(valid_sigma_img.to(device))
+
+                        alpha_acc = acc(alpha_out, valid_label)
+                        sigma_acc = acc(sigma_out, valid_label)
 
                         logs = {
-                            'loss/cls_loss': torch.mean(loss),
-                            'metric/clean_acc': 0,
-                            'metric/noisy_acc': 0,
-                            'metric/blurry_acc': 0,
+                            'metric/alpha_acc': torch.mean(alpha_acc),
+                            'metric/sigma_acc': torch.mean(sigma_acc),
                             'aux/alpha': alpha,
                             'aux/sigma': sigma,
                         }
@@ -112,6 +113,8 @@ def nmd_trainer(config, model_type: str, device: str, summary):
                     0.0,
                     alpha,
                     sigma,
+                    alpha_stacks,
+                    sigma_stacks
                 )
                 break
 
@@ -124,7 +127,7 @@ def frsr_trainer(config, model_type: str, device: str, summary):
     gen_network, disc_network, nmd_network = build_model(
         config, model_type, device
     )
-    start_epochs, start_ssim, _, _ = load_models(
+    start_epochs, start_ssim, _, _, _, _ = load_models(
         config, device, gen_network, disc_network, nmd_network
     )
     end_epochs: int = config['model'][model_type]['epochs'] + 1

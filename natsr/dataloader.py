@@ -5,6 +5,7 @@ from math import sqrt
 from typing import List, Optional, Tuple
 
 import numpy as np
+import torch
 from PIL import Image
 from torch import cat
 from torch.utils.data import DataLoader, Dataset
@@ -45,7 +46,9 @@ def lr_transform(crop_size: int, scale: int):
     )
 
 
-def get_nmd_data(img, scale: int, alpha: float, sigma: float, mode: str):
+def get_nmd_data(
+    img, scale: int, alpha: float, sigma: float, mode: str
+) -> Optional[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
     batch_size: int = img.size(0)
 
     if mode == Mode.TRAIN:
@@ -54,11 +57,16 @@ def get_nmd_data(img, scale: int, alpha: float, sigma: float, mode: str):
             img[batch_size // 4 : batch_size // 2, :, :, :], scale, alpha
         )
         clean_img = img[batch_size // 2 :, :, :, :]
-    else:
+        return cat([noisy_img, blurry_img, clean_img], dim=0)
+    elif mode == Mode.VALID:
         noisy_img = get_noisy(img, sigma)
-        blurry_img = get_blurry(img, 4, alpha)
+        blurry_img = get_blurry(img, scale, alpha)
         clean_img = img
-    return cat([noisy_img, blurry_img, clean_img], dim=0)
+        return (
+            cat([blurry_img, clean_img], dim=0),
+            cat([noisy_img, clean_img], dim=0),
+        )
+    raise NotImplementedError(f'[-] not supported mode : {mode}')
 
 
 class DIV2KDataSet(Dataset):
