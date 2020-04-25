@@ -109,10 +109,7 @@ def save_model(
     alpha: Optional[float],
     sigma: Optional[float],
 ):
-    model_info = {
-        'model': model.state_dict(),
-        'epoch': epoch,
-    }
+    model_info = {'model': model.state_dict(), 'epoch': epoch}
     if ssim:
         model_info.update({'ssim': ssim})
     if alpha:

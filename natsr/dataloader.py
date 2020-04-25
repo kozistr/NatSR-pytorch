@@ -51,7 +51,7 @@ def get_nmd_data(img, scale: int, alpha: float, sigma: float, mode: str):
     if mode == Mode.TRAIN:
         noisy_img = get_noisy(img[: batch_size // 4, :, :, :], sigma)
         blurry_img = get_blurry(
-            img[batch_size // 4 : batch_size // 2, :, :, :], scale, alpha,
+            img[batch_size // 4 : batch_size // 2, :, :, :], scale, alpha
         )
         clean_img = img[batch_size // 2 :, :, :, :]
     else:
@@ -87,7 +87,7 @@ class DIV2KDataSet(Dataset):
             self.hr_image_paths = sorted(
                 glob(
                     os.path.join(
-                        dataset_path, f'DIV2K_{data_type}_HR', '*.png',
+                        dataset_path, f'DIV2K_{data_type}_HR', '*.png'
                     )
                 )
             )

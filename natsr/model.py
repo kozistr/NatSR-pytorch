@@ -81,7 +81,7 @@ class Generator(nn.Module):
         self.rd_blocks = nn.ModuleList(
             [
                 ResidualDenseBlock(
-                    self.n_feats, nb_layers=self.nb_layers, scale=self.scale,
+                    self.n_feats, nb_layers=self.nb_layers, scale=self.scale
                 )
                 for _ in range(self.n_rep_rd_blocks)
                 for _ in range(self.n_rd_blocks)
@@ -96,7 +96,7 @@ class Generator(nn.Module):
                 self.n_feats, n_ps_feats, kernel_size=3, padding=1
             )
             self.up_conv2 = nn.Conv2d(
-                self.n_feats, n_ps_feats, kernel_size=3, padding=1,
+                self.n_feats, n_ps_feats, kernel_size=3, padding=1
             )
             self.pixel_shuffle = nn.PixelShuffle(self.scale // 2)
         else:
@@ -162,9 +162,7 @@ class Discriminator(nn.Module):
         self.n_feats = self.config[ModelType.FRSR]['n_feats']
 
         self.conv1_1 = spectral_norm(
-            nn.Conv2d(
-                self.channel, self.n_feats * 1, kernel_size=3, padding=1,
-            )
+            nn.Conv2d(self.channel, self.n_feats * 1, kernel_size=3, padding=1)
         )
         self.conv1_2 = spectral_norm(
             nn.Conv2d(
@@ -294,7 +292,7 @@ class NMD(nn.Module):
         self.n_feats = self.config[ModelType.NMD]['n_feats']
 
         self.conv1_1 = nn.Conv2d(
-            self.channel, self.n_feats * 1, kernel_size=3, padding=1,
+            self.channel, self.n_feats * 1, kernel_size=3, padding=1
         )
         self.conv1_2 = nn.Conv2d(
             self.n_feats * 1, self.n_feats * 1, kernel_size=3, padding=1
