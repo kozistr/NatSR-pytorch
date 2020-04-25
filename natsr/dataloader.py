@@ -5,8 +5,8 @@ from math import sqrt
 from typing import List, Optional, Tuple
 
 import numpy as np
-import torch
 from PIL import Image
+from torch import cat
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import (
     Compose,
@@ -58,7 +58,7 @@ def get_nmd_data(img, scale: int, alpha: float, sigma: float, mode: str):
         noisy_img = get_noisy(img, sigma)
         blurry_img = get_blurry(img, 4, alpha)
         clean_img = img
-    return torch.cat([noisy_img, blurry_img, clean_img], dim=0)
+    return cat([noisy_img, blurry_img, clean_img], dim=0)
 
 
 class DIV2KDataSet(Dataset):

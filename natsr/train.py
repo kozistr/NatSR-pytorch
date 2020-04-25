@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from natsr import Mode, ModelType
+from natsr import THRESHOLD_ALPHA, THRESHOLD_SIGMA, Mode, ModelType
 from natsr.dataloader import build_loader, get_nmd_data
 from natsr.losses import (
     build_classification_loss,
@@ -47,6 +47,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
     for epoch in range(
         start_epochs, config['model'][model_type]['epochs'] + 1
     ):
+        print(f'[+] Epoch {epoch}')
         for _, lr_img in train_loader:
             train_img = get_nmd_data(lr_img, scale, alpha, sigma, Mode.TRAIN)
             train_label = torch.cat(
@@ -98,7 +99,7 @@ def nmd_trainer(config, model_type: str, device: str, summary):
 
                 nmd_network.train()
 
-            if alpha >= 0.8 and sigma <= 0.0044:
+            if alpha >= THRESHOLD_ALPHA and sigma <= THRESHOLD_SIGMA:
                 print(
                     f'[+] training NMD is done! '
                     f'alpha : {alpha} sigma : {sigma}'

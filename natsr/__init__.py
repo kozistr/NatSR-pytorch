@@ -2,6 +2,9 @@ from enum import Enum, unique
 
 CONFIG_FILENAME: str = 'config.yaml'
 
+THRESHOLD_ALPHA: float = 0.8
+THRESHOLD_SIGMA: float = 0.0444
+
 
 @unique
 class Mode(str, Enum):
